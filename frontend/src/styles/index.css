@@ -1,0 +1,14 @@
+/* index.css - File chính, chỉ import các file CSS khác */
+
+/* Import Tailwind - Preflight sẽ tự động được include */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Custom variant cho dark mode */
+@custom-variant dark (&:is(.dark *));
+
+/* Import shadcn styles - File này sẽ được shadcn CLI tự động cập nhật */
+@import './shadcn.css';
+
+/* Import custom styles - CSS riêng của project */
+@import './custom.css';

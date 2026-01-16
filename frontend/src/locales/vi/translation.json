@@ -1,0 +1,219 @@
+{
+    "settings": {
+        "languages": "Ngôn ngữ",
+        "appearance": "Giao diện",
+        "insights": "Thống kê",
+        "settingsMenu": "Cài đặt",
+        "feeds": "Nguồn cấp",
+        "saved": "Đã lưu",
+        "liked": "Đã thích",
+        "reportProblem": "Báo cáo sự cố",
+        "logout": "Đăng xuất"
+    },
+
+    "appearance": {
+        "title": "Giao diện",
+        "auto": "Tự động"
+    },
+
+    "feeds": {
+        "title": "Nguồn cấp",
+        "forYou": "Dành cho bạn",
+        "following": "Đang theo dõi",
+        "ghostPosts": "Bài viết ẩn danh"
+    },
+
+    "notFound": {
+        "title": "Không phải ai lang thang cũng bị lạc, nhưng trang này thì có",
+        "description": "Liên kết không hoạt động hoặc trang đã bị xóa. Quay lại để tiếp tục khám phá.",
+        "button": "Quay lại"
+    },
+
+    "loginPanel": {
+        "title": "Đăng nhập hoặc đăng ký Threads",
+        "description": "Xem mọi người đang nói về điều gì và tham gia cuộc trò chuyện.",
+        "continueWithInstagram": "Tiếp tục với Instagram",
+        "loginWithUsername": "Đăng nhập bằng tên người dùng"
+    },
+
+    "auth": {
+        "loginTitle": "Đăng nhập bằng tài khoản Instagram của bạn",
+        "registerTitle": "Tạo tài khoản miễn phí",
+        "username": "Tên người dùng",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "loginButton": "Đăng nhập",
+        "registerButton": "Đăng ký",
+        "forgotPassword": "Quên mật khẩu?",
+        "or": "hoặc",
+        "continueWithInstagram": "Tiếp tục với Instagram",
+        "noAccount": "Bạn chưa có tài khoản?",
+        "haveAccount": "Bạn đã có tài khoản?",
+        "registerNow": "Đăng ký ngay",
+        "loginNow": "Đăng nhập ngay",
+        "backToHome": "Quay về trang chủ",
+        "getApp": "Tải ứng dụng",
+        "loading": "Đang xử lý...",
+        "verifying": "Đang xác minh...",
+
+        "validation": {
+            "identifierMin": "Tên người dùng hoặc email phải có ít nhất 3 ký tự",
+            "identifierRequired": "Vui lòng nhập tên người dùng hoặc email",
+            "identifierInvalid": "Tên người dùng hoặc email không đúng định dạng",
+
+            "usernameMin": "Tên người dùng phải có ít nhất 3 ký tự",
+            "usernameMax": "Tên người dùng không quá 30 ký tự",
+            "usernameRequired": "Vui lòng nhập tên người dùng",
+            "usernameInvalid": "Tên người dùng chỉ chứa chữ, số, dấu chấm và gạch dưới",
+
+            "emailRequired": "Vui lòng nhập email",
+            "emailInvalid": "Email không hợp lệ",
+
+            "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+            "passwordRequired": "Vui lòng nhập mật khẩu",
+
+            "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+            "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp"
+        },
+
+        "messages": {
+            "loginSuccess": "Đăng nhập thành công!",
+            "loginError": "Thông tin đăng nhập không chính xác. Vui lòng thử lại.",
+
+            "registerSuccessEmail": "Chúng tôi đã gửi một liên kết xác thực tới email <strong>{{email}}</strong>. Vui lòng kiểm tra email để xác thực tài khoản.",
+            "registerErrorMessage": "Đăng ký thất bại. Vui lòng thử lại.",
+
+            "registerSuccess": "Đăng ký thành công!",
+            "registerError": "Đăng ký thất bại. Vui lòng thử lại.",
+
+            "logoutSuccess": "Đăng xuất thành công"
+        },
+
+        "forgotPasswordPage": {
+            "title": "Gặp vấn đề khi đăng nhập?",
+            "description": "Nhập địa chỉ email và chúng tôi sẽ gửi cho bạn liên kết để truy cập lại tài khoản.",
+            "inputPlaceholder": "Địa chỉ email",
+            "submitButton": "Gửi liên kết",
+            "sending": "Đang gửi",
+            "successMessage": "Liên kết đặt lại mật khẩu đã được gửi tới email của bạn.",
+            "errorMessage": "Gửi liên kết thất bại. Vui lòng thử lại."
+        },
+
+        "resetPasswordPage": {
+            "title": "Đặt lại mật khẩu",
+            "description": "Vui lòng nhập mật khẩu mới cho tài khoản",
+            "newPassword": "Mật khẩu mới",
+            "confirmPassword": "Nhập lại mật khẩu mới",
+            "submitButton": "Đổi mật khẩu",
+            "changing": "Đang đổi",
+
+            "tokenInvalid": "Liên kết đã hết hạn hoặc không hợp lệ",
+            "tokenExpired": "Liên kết đặt lại mật khẩu đã hết hạn",
+            "resetSuccess": "Tạo mật khẩu mới thành công, vui lòng đăng nhập",
+            "resetError": "Đã có lỗi xảy ra, vui lòng thử lại sau"
+        },
+
+        "verifyEmailPage": {
+            "title": "Liên kết đã hết hạn hoặc không hợp lệ",
+            "description": "Vui lòng yêu cầu gửi lại email xác thực hoặc đăng nhập.",
+            "resendButton": "Gửi lại email xác thực",
+            "loginButton": "Đi tới trang đăng nhập",
+            "verifying": "Đang xác minh...",
+            "success": "Đã xác minh tài khoản thành công! Bây giờ bạn có thể đăng nhập để bắt đầu sử dụng Threads.",
+            "resendSuccess": "Đã gửi lại email xác thực!",
+            "resendError": "Gửi email thất bại. Vui lòng thử lại.",
+            "resending": "Đang gửi..."
+        }
+    },
+
+    "homePage": {
+        "endMessage": "Không còn bài viết nào nữa"
+    },
+
+    "footer": {
+        "terms": "Điều khoản Threads",
+        "privacy": "Chính sách Bảo mật",
+        "cookies": "Chính sách Cookie",
+        "cookieSettings": "Cài đặt Cookie",
+        "report": "Báo cáo sự cố"
+    },
+
+    "feed": {
+        "home": "Trang chủ",
+        "forYou": "Dành cho bạn",
+        "following": "Đang theo dõi"
+    },
+
+    "post": {
+        "whatsNew": "Bạn đang nghĩ gì?",
+        "postButton": "Đăng"
+    },
+
+    "postMenuContent": {
+        "addFeed": "Thêm vào feed",
+        "createFeed": "Tạo feed mới",
+        "save": "Lưu bài viết vào collection",
+        "notInterested": "Ẩn bài viết khỏi feed",
+        "mute": "Tắt tiếng người dùng này",
+        "restrict": "Hạn chế người dùng này",
+        "block": "Chặn người dùng",
+        "report": "Báo cáo bài viết",
+        "copy": "Sao chép liên kết"
+    },
+
+    "threadModal": {
+        "newThread": {
+            "title": "Tạo bài viết mới",
+            "placeholder": "Có gì mới không?"
+        },
+
+        "reply": {
+            "title": "Trả lời",
+            "placeholder": "Trả lời ",
+            "options": "Tùy chọn trả lời"
+        },
+
+        "actions": {
+            "cancel": "Hủy",
+            "post": "Đăng",
+            "posting": "Đang đăng..."
+        },
+
+        "content": {
+            "addTopic": "Thêm chủ đề",
+            "addToThread": "Thêm vào chuỗi"
+        },
+
+        "sharedMenu": {
+            "copyLink": "Sao chép liên kết",
+            "copyImage": "Sao chép ảnh",
+            "getEmbedCode": "Lấy mã nhúng"
+        },
+
+        "repostMenu": {
+            "repost": "Đăng lại",
+            "quote": "Trích dẫn kèm bình luận"
+        }
+    },
+
+    "profilePage": {
+        "profile": "Trang cá nhân",
+        "editProfile": "Chỉnh sửa trang cá nhân",
+        "followers": "người theo dõi",
+
+        "tabs": {
+            "threads": "Bài đăng",
+            "threadsNote": "Chưa có bài viết nào",
+
+            "replies": "Phản hồi",
+            "repliesNote": "Phản hồi của bạn sẽ hiển thị tại đây",
+
+            "media": "Đa phương tiện",
+            "mediaNote": "Hình ảnh & video của bạn sẽ hiển thị tại đây",
+
+            "reposts": "Chia sẻ lại",
+            "repostsNote": "Bài đăng lại của bạn sẽ hiển thị tại đây"
+        }
+    }
+}
