@@ -1,0 +1,12 @@
+bin/
+obj/
+Logs/
+.vs/
+.idea/
+.git/
+.claude/
+*.user
+*.tmp
+.env
+docker-compose.yml
+Dockerfile

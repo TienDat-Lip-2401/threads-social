@@ -2,6 +2,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+using Microsoft.EntityFrameworkCore;
+using Pharse2.Models.EntityModels;
 using Pharse2;
 using Pharse2.Filters;
 using Pharse2.MiddleWares;
@@ -66,6 +68,12 @@ builder.Services.AddCors(options =>
     });
 });
 var app = builder.Build();
+// Docker: tự tạo/cập nhật DB khi khởi động (bật bằng Database__MigrateOnStartup=true)
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
 app.UseCors("AllowOrigin");
 // Tự động ghi log mọi Request gọi đến API
 //app.UseSerilogRequestLogging();

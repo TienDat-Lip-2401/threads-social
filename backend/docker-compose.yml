@@ -1,0 +1,36 @@
+# Chạy: docker compose up -d --build   (cần file .env, copy từ .env.example)
+# API:     http://localhost:5080/api/   (Swagger: http://localhost:5080/swagger; đổi cổng bằng API_PORT)
+# SQL:     localhost,14333  user sa  (mật khẩu MSSQL_SA_PASSWORD trong .env)
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Thiếu MSSQL_SA_PASSWORD trong .env}
+    ports:
+      - "14333:1433"   # tránh trùng cổng với SQL Server cài sẵn trên máy
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build: .
+    depends_on:
+      sqlserver:
+        condition: service_healthy   # đợi SQL sẵn sàng rồi mới migrate
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=Pharse2;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;"
+      JwtSettings__Key: ${JWT_KEY:?Thiếu JWT_KEY trong .env}
+      Database__MigrateOnStartup: "true"
+    ports:
+      - "${API_PORT:-5080}:8080"
+    restart: unless-stopped
+
+volumes:
+  sqldata:
