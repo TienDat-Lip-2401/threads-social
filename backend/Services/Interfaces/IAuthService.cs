@@ -8,7 +8,7 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> RegisterAsync(RegisterRequestDto requestDto);
         Task<ApiResponse> LoginAsync(LoginRequestDto requestDto, string? ipAddress, string? userAgent);
         Task<ApiResponse> RefreshTokenAsync(RefreshTokenRequestDto dto, string? ipAddress, string? userAgent);
-        Task<ApiResponse> LogoutAsync(LogoutRequestDto dto);
+        Task<ApiResponse> LogoutAsync();
         Task<ApiResponse> RevokeAllSessionsAsync();
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Pharse2.Filters;
 using Pharse2.Models.DtoModels.Auth;
 using Pharse2.Services.Interfaces;
-using System.Security.Claims;
 
 namespace Pharse2.Controllers
 {
@@ -20,71 +19,57 @@ namespace Pharse2.Controllers
             _userService = userService;
             _commonService = commonService;
         }
-        [HttpPost]
-        [Route("register")]
+
+        // Mọi action trả đúng mã HTTP mà service đã quyết định (200/201/400/403/404/422/500)
+        [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterRequestDto dto)
         {
             var response = await _authService.RegisterAsync(dto);
-            if (response.StatusCode == 400)
-            {
-                return BadRequest(response);
-            }
-            return Ok(response);
+            return StatusCode(response.StatusCode, response);
         }
-        [HttpPost]
-        [Route("login")]
+
+        [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginRequestDto dto)
         {
-            var ipAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                            ?? HttpContext.Connection.RemoteIpAddress?.ToString();
-            var userAgent = Request.Headers["User-Agent"].ToString();
-            var response = await _authService.LoginAsync(dto, ipAddress, userAgent);
-            if (response.StatusCode == 400)
-            {
-                return BadRequest(response);
-            }
-            return Ok(response);
+            var response = await _authService.LoginAsync(dto, GetIpAddress(), GetUserAgent());
+            return StatusCode(response.StatusCode, response);
         }
-        [HttpPost]
-        [Route("refresh-token")]
+
+        [HttpPost("refresh")]
         [AllowAnonymous]
         public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
         {
-            var ipAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                           ?? HttpContext.Connection.RemoteIpAddress?.ToString();
-            var userAgent = Request.Headers["User-Agent"].ToString();
-            var response = await _authService.RefreshTokenAsync(dto, ipAddress, userAgent);
-            if (response.StatusCode != 200) return BadRequest(response);
-            return Ok(response);
+            var response = await _authService.RefreshTokenAsync(dto, GetIpAddress(), GetUserAgent());
+            return StatusCode(response.StatusCode, response);
         }
+
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout(LogoutRequestDto dto)
+        public async Task<IActionResult> Logout()
         {
-            var response = await _authService.LogoutAsync(dto);
-            if (response.StatusCode != 200) return BadRequest(response);
-            return Ok(response);
+            var response = await _authService.LogoutAsync();
+            return StatusCode(response.StatusCode, response);
         }
-        [HttpGet]
-        [Route("me")]
+
+        [HttpGet("user")]
         public async Task<IActionResult> GetUserInfo()
         {
-            int userId = _commonService.GetUserId();
-            var response = await _userService.GetMeAsync(userId);
-
-            if (response.StatusCode == 404) return NotFound(response);
-
-            return Ok(response);
+            var response = await _userService.GetMeAsync(_commonService.GetUserId());
+            return StatusCode(response.StatusCode, response);
         }
-        [HttpPost]
-        [Route("revoke-all-sessions")]
+
+        [HttpPost("revoke-all-sessions")]
         [AuthorizeRole("Admin", "User")]
         public async Task<IActionResult> RevokeAllSessions()
         {
             var response = await _authService.RevokeAllSessionsAsync();
-            if (response.StatusCode != 200) return BadRequest(response);
-            return Ok(response);
+            return StatusCode(response.StatusCode, response);
         }
+
+        private string? GetIpAddress() =>
+            Request.Headers["X-Forwarded-For"].FirstOrDefault() ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        private string GetUserAgent() => Request.Headers["User-Agent"].ToString();
     }
 }

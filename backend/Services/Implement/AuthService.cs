@@ -32,11 +32,13 @@ namespace Pharse2.Services.Implement
         }
         public async Task<ApiResponse> LoginAsync(LoginRequestDto dto, string? ipAddress, string? userAgent)
         {
-            _logger.LogInformation("Đang xử lý đăng nhập cho: {Email}", dto.Email);
-            var user = await _userRepository.GetByEmailAsync(dto.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+            _logger.LogInformation("Đang xử lý đăng nhập cho: {Login}", dto.Login);
+            // FE gửi 1 ô "login": có thể là email hoặc username
+            var user = await _userRepository.GetByEmailAsync(dto.Login)
+                       ?? await _userRepository.GetByUsernameAsync(dto.Login);
+            if (user == null || user.DeleteFlg || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             {
-                _logger.LogWarning("Đăng nhập thất bại: Sai thông tin cho Email {Email} | IP: {IP}", dto.Email, ipAddress);
+                _logger.LogWarning("Đăng nhập thất bại: Sai thông tin cho {Login} | IP: {IP}", dto.Login, ipAddress);
                 return ApiResponse.Response(400, "Sai tên đăng nhập hoặc mật khẩu!");
             }
             //Mở bất đồng bộ
@@ -58,7 +60,7 @@ namespace Pharse2.Services.Implement
                 await _refreshTokenRepository.CreateAsync(newRefreshToken);
                 await _refreshTokenRepository.SaveChangesAsync();
                 string refreshTokenId = newRefreshToken.Id.ToString();
-                var acessToken = _tokenService.GenerateAccessToken(user.Id, user.Email, refreshTokenId);
+                var acessToken = _tokenService.GenerateAccessToken(user.Id, user.Username, refreshTokenId);
                 //Đóng bất đồng bôj
                 await transaction.CommitAsync();
                 _logger.LogInformation("Đăng nhập thành công: User {Email} (ID: {UserId}) | TokenId: {TokenId}", user.Email, user.Id, refreshTokenId);
@@ -75,26 +77,18 @@ namespace Pharse2.Services.Implement
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex.Message, "LỖI khi Login cho {Email}", dto.Email);
-                // Đào sâu để lấy InnerException (Lỗi gốc từ Database)
-                Exception innerEx = ex;
-                while (innerEx.InnerException != null)
-                {
-                    innerEx = innerEx.InnerException;
-                }
-
-                // Trả lỗi gốc ra ngoài để bạn biết chính xác cần sửa gì trong DB
-                return ApiResponse.Response(500, "Lỗi Server/DB: " + innerEx.Message);
-
+                // Lỗi gốc chỉ ghi vào log, không trả chi tiết DB ra cho client
+                _logger.LogError(ex, "LỖI khi Login cho {Login}", dto.Login);
+                return ApiResponse.Response(500, "Lỗi hệ thống khi đăng nhập!");
             }
         }
 
-        public async Task<ApiResponse> LogoutAsync(LogoutRequestDto dto)
+        // FE gọi logout không kèm body: thu hồi phiên gắn với access token hiện tại
+        public async Task<ApiResponse> LogoutAsync()
         {
             // Ghi log chi tiết về yêu cầu đăng xuất
             _logger.LogInformation("Đang xử lý đăng xuất!");
-            string tokenHash = _tokenService.ComputeSha256Hash(dto.refresh_token);
-            var existingToken = await _refreshTokenRepository.GetByTokenHashAsync(tokenHash);
+            var existingToken = await _refreshTokenRepository.GetByIdAsync(_commonService.GetRefreshTokenId());
             if (existingToken == null || existingToken.UserId != _commonService.GetUserId())
             {
                 // Ghi log chi tiết về lỗi đăng xuất
@@ -176,23 +170,27 @@ namespace Pharse2.Services.Implement
 
         public async Task<ApiResponse> RegisterAsync(RegisterRequestDto dto)
         {
+            // Gom lỗi theo từng ô để FE hiện ngay dưới ô đó: errors.{field}[0]
+            var errors = new Dictionary<string, string[]>();
             var emailRegex = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
-            if(!Regex.IsMatch(dto.Email, emailRegex))
-            {
-                return ApiResponse.Response(400, "Email không hợp lệ!");
-            }
+            if (!Regex.IsMatch(dto.Email, emailRegex))
+                errors["email"] = new[] { "Email không hợp lệ!" };
+            else if (await _userRepository.ExistsByEmailAsync(dto.Email))
+                errors["email"] = new[] { "Email đã tồn tại!" };
+
+            if (await _userRepository.ExistsByUserNameAsync(dto.Username))
+                errors["username"] = new[] { "Tên đăng nhập đã tồn tại!" };
+
             var passwordRegex = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
             if (!Regex.IsMatch(dto.Password, passwordRegex))
+                errors["password"] = new[] { "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&)!" };
+
+            if (dto.PasswordConfirmation != dto.Password)
+                errors["password_confirmation"] = new[] { "Mật khẩu xác nhận không khớp!" };
+
+            if (errors.Count > 0)
             {
-                return ApiResponse.Response(400, "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&)!");
-            }
-            if (await _userRepository.ExistsByUserNameAsync(dto.Username))
-            {
-                return ApiResponse.Response(400, "Tên đăng nhập đã tồn tại!");
-            }
-            if(await _userRepository.ExistsByEmailAsync(dto.Email))
-            {
-                return ApiResponse.Response(400, "Email đã tồn tại!");
+                return ApiResponse.ValidationError(errors);
             }
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             var user = new User
@@ -203,7 +201,7 @@ namespace Pharse2.Services.Implement
             };
             await _userRepository.CreateAsync(user);
             await _userRepository.SaveChangesAsync();
-            return ApiResponse.Response(200, "Đăng ký thành công!");
+            return ApiResponse.Response(201, "Đăng ký thành công!");
 
         }
 

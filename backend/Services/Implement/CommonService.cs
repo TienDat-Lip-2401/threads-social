@@ -21,5 +21,9 @@ namespace Pharse2.Services.Implement
         {
             return _userId;
         }
+
+        private int _refreshTokenId;
+        public void SetRefreshTokenId(int refreshTokenId) => _refreshTokenId = refreshTokenId;
+        public int GetRefreshTokenId() => _refreshTokenId;
     }
 }

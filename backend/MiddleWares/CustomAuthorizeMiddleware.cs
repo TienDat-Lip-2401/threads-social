@@ -71,6 +71,7 @@ namespace Pharse2.MiddleWares
             }
             // Lưu thông tin user id vào CommonService để sử dụng trong các service khác
             commonService.SetUserId(userId);
+            commonService.SetRefreshTokenId(refreshTokenId);
             await _next(context);
         }
         private async Task WriteUnauthorized(HttpContext context, string message)
