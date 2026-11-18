@@ -13,6 +13,13 @@ namespace Pharse2
         
         public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Bí mật không nằm trong appsettings.json: báo lỗi rõ ràng ngay khi khởi động nếu thiếu
+            foreach (var key in new[] { "ConnectionStrings:DefaultConnection", "JwtSettings:Key" })
+            {
+                if (string.IsNullOrWhiteSpace(configuration[key]))
+                    throw new InvalidOperationException(
+                        $"Thiếu cấu hình '{key}'. Đặt bằng: dotnet user-secrets set \"{key}\" \"<giá trị>\" (hoặc biến môi trường {key.Replace(":", "__")}).");
+            }
             //Database
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));

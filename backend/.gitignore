@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.tmp
+
+# Serilog log files
+Logs/
+
+# Local secrets (dùng dotnet user-secrets thay vì file này)
+appsettings.*.local.json
+.env
+
+# Claude Code & AI skills (local only)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+PONYTAIL-DEBT.md
+.playwright-cli/
