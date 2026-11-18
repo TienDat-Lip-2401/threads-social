@@ -2,6 +2,7 @@
 using Pharse2.Helper;
 using Pharse2.Models;
 using Pharse2.Models.CommonModels;
+using Pharse2.Models.DtoModels;
 using Pharse2.Models.EntityModels;
 using Pharse2.Repositories.Interfaces;
 
@@ -26,18 +27,6 @@ namespace Pharse2.Repositories.Implement
                 .ExecuteDeleteAsync();
             return deleted > 0;
         }
-
-        public async Task<IEnumerable<Post>> GetAllAsync()
-        {
-            return await _context.Posts
-                .Include(p => p.User)
-                .Include(p => p.Comments)
-                .Include(p => p.LikePosts)
-                .OrderBy(p => p.CreatedAt)
-                .ToListAsync();
-        }
-
-
 
         public async Task<Post?> GetByIdAsync(int id)
         {
@@ -77,26 +66,31 @@ namespace Pharse2.Repositories.Implement
             return comments;
         }
 
-        public async Task<IEnumerable<Post>> GetPostsByUserIdAsync(int userId)
-        {
-            var posts = await _context.Posts
-                .Where(p => p.UserId == userId)
-                .Include(p => p.User)
-                .Include(p => p.Comments)
-                .Include(p => p.LikePosts)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
-            return posts;
-        }
-
-        public async Task<PagedResult<Post>> GetPagedPostsAsync(int pageNumber, int pageSize)
+        public async Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId)
         {
             return await _context.Posts
-                .Include(p => p.User)
-                .Where(p => p.DeleteFlg == false)
-                .OrderBy(p => p.Id)
-                .ToPageResultAsync(pageNumber, pageSize);
+                .Where(p => p.UserId == userId && !p.DeleteFlg)
+                .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
+                .Select(PostResponseDto.Projection)
+                .ToListAsync();
+        }
 
+        // Feed: bài mới nhất lên đầu
+        public async Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize)
+        {
+            return await _context.Posts
+                .Where(p => !p.DeleteFlg)
+                .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
+                .Select(PostResponseDto.Projection)
+                .ToPageResultAsync(pageNumber, pageSize);
+        }
+
+        public async Task<PostResponseDto?> GetPostDtoByIdAsync(int id)
+        {
+            return await _context.Posts
+                .Where(p => p.Id == id && !p.DeleteFlg)
+                .Select(PostResponseDto.Projection)
+                .FirstOrDefaultAsync();
         }
     }
 }

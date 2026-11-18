@@ -21,21 +21,6 @@ namespace Pharse2.Services.Implement
             _commonService = commonService;
             _logger = logger;
         }
-        public async Task<ApiResponse> GetAllPostsAsync()
-        {
-            var posts = await _postRepository.GetAllAsync();
-            var result = posts.Select(p => new PostResponseDto
-            {
-                Id = p.Id,
-                Content = p.Content,
-                CreatedAt = p.CreatedAt,
-                UserId = p.UserId,
-                AuthorName = p.User.Username,
-                CommentCount = p.Comments.Count,
-                LikeCount = p.LikePosts.Count
-            }).ToList();
-            return ApiResponse.Response(200, "Posts retrieved successfully", result);
-        }
         public async Task<ApiResponse> CreatePostAsync(PostRequestDto dto)
         {
             if (string.IsNullOrEmpty(dto.Content))
@@ -84,23 +69,12 @@ namespace Pharse2.Services.Implement
 
         public async Task<ApiResponse> GetPostByIdAsync(int id)
         {
-            var post  = await _postRepository.GetByIdAsync(id);
+            var post = await _postRepository.GetPostDtoByIdAsync(id);
             if(post == null)
             {
                 return ApiResponse.Response(404, "Post not found");
             }
-            var result = new PostResponseDto
-            {
-                Id = post.Id,
-                Content = post.Content,
-                CreatedAt = post.CreatedAt,
-                UpdatedAt = DateTime.UtcNow,
-                UserId = post.UserId,
-                AuthorName = post.User.Username,
-                CommentCount = post.Comments.Count,
-                LikeCount = post.LikePosts.Count
-            };
-            return ApiResponse.Response(200, "Post retrieved successfully", result);
+            return ApiResponse.Response(200, "Post retrieved successfully", post);
         }
 
         public async Task<ApiResponse> UpdatePostAsync(int id, PostRequestDto dto)
@@ -177,42 +151,20 @@ namespace Pharse2.Services.Implement
         public async Task<ApiResponse> GetPostsByUserIdAsync(int userId)
         {
             var posts = await _postRepository.GetPostsByUserIdAsync(userId);
-            if(posts == null || !posts.Any())
+            if(posts.Count == 0)
             {
                 return ApiResponse.Response(404, "This user has no posts yet or does not exist.");
             }
-            var result = posts.Select(p => new PostResponseDto
-            {
-                Id = p.Id,
-                Content = p.Content,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                UserId = p.UserId,
-                AuthorName = p.User.Username,
-                CommentCount = p.Comments.Count,
-                LikeCount = p.LikePosts.Count
-            }).ToList();
-            return ApiResponse.Response(200, "Posts retrieved successfully", result);
+            return ApiResponse.Response(200, "Posts retrieved successfully", posts);
         }
 
-        public async Task<ApiResponse> GetPostAsync(int pageNumber, int pageSize)
+        // Trả { data: [...posts], pagination: {...} } đúng dạng FE đọc
+        public async Task<ApiResponse> GetFeedAsync(int pageNumber, int pageSize)
         {
-            pageNumber = pageNumber < 1 ? 1 : pageNumber;
-            pageSize = pageSize < 1 ? 10 : pageSize;
-            var pagedEntities = await _postRepository.GetPagedPostsAsync(pageNumber, pageSize);
-            var postsDto = pagedEntities.Items.Select(p => new PostResponseDto
-            {
-                Id = p.Id,
-                Content = p.Content,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                UserId = p.UserId,
-                AuthorName = p.User.Username,
-                CommentCount = p.Comments.Count,
-                LikeCount = p.LikePosts.Count
-            }).ToList();
-            var result = new PagedResult<PostResponseDto>(postsDto, pagedEntities.TotalItems, pagedEntities.CurrentPage, pagedEntities.PageSize);
-            return ApiResponse.Response(200, "Lấy danh sách thành công!", result);
+            pageNumber = Math.Max(1, pageNumber);
+            pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50); // chặn per_page quá lớn
+            var page = await _postRepository.GetFeedAsync(pageNumber, pageSize);
+            return ApiResponse.Paged(page, "Lấy danh sách thành công!");
         }
     }
 }

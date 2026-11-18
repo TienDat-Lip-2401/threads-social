@@ -1,15 +1,49 @@
-﻿namespace Pharse2.Models.DtoModels
+﻿using System.Linq.Expressions;
+
+namespace Pharse2.Models.DtoModels
 {
+    // Dạng bài viết FE đọc (snake_case): id, content, created_at, user{...}, media_urls,
+    // likes_count, replies_count, reposts_and_quotes_count
     public class PostResponseDto
     {
         public int Id { get; set; }
         public string Content { get; set; } = null!;
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        // Dữ liệu mở rộng lấy từ các bảng khác
-        public int UserId { get; set; }
-        public string AuthorName { get; set; } = null!; // Tên người viết
-        public int CommentCount { get; set; }           // Tổng số bình luận
-        public int LikeCount { get; set; }
+
+        // Post.CreatedAt được lưu bằng UtcNow; đánh dấu Kind=Utc để JSON có hậu tố "Z"
+        // và FE (dayjs) không hiểu nhầm thành giờ địa phương.
+        private DateTime _createdAt;
+        public DateTime CreatedAt { get => _createdAt; set => _createdAt = DateTime.SpecifyKind(value, DateTimeKind.Utc); }
+        private DateTime _updatedAt;
+        public DateTime UpdatedAt { get => _updatedAt; set => _updatedAt = DateTime.SpecifyKind(value, DateTimeKind.Utc); }
+
+        public PostUserDto User { get; set; } = null!;
+        // shortcut: chưa có bảng media, luôn rỗng; Bước 6 (upload ảnh) sẽ điền
+        public List<string> MediaUrls { get; set; } = new();
+        public int LikesCount { get; set; }
+        // Số trả lời trực tiếp vào bài (comment cấp 1)
+        public int RepliesCount { get; set; }
+        // shortcut: chưa có tính năng repost, luôn 0
+        public int RepostsAndQuotesCount { get; set; }
+
+        // Dùng trong .Select(...) để EF đếm bằng SQL (COUNT) thay vì tải hết Comments/LikePosts
+        public static readonly Expression<Func<Post, PostResponseDto>> Projection = p => new PostResponseDto
+        {
+            Id = p.Id,
+            Content = p.Content,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            User = new PostUserDto { Id = p.User.Id, Username = p.User.Username },
+            LikesCount = p.LikePosts.Count(),
+            RepliesCount = p.Comments.Count(c => c.ParentCommentId == null),
+        };
+    }
+
+    public class PostUserDto
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = null!;
+        // shortcut: bảng User chưa có avatar/verified; FE tự dùng avatar mặc định khi null
+        public string? AvatarUrl { get; set; }
+        public bool Verified { get; set; }
     }
 }

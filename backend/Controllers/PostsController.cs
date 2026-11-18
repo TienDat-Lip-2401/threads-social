@@ -19,16 +19,16 @@ namespace Pharse2.Controllers
 
         }
         
-        [HttpGet]
+        // FE: GET posts/feed?type=for_you&page=1&per_page=10 (type chưa dùng, chỉ có 1 feed)
+        [HttpGet("feed")]
         [AllowAnonymous]
-        
-        public async Task<IActionResult> GetAllPosts([FromQuery]int page, [FromQuery]int pageSize)
+        public async Task<IActionResult> GetFeed([FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10)
         {
-            var response = await _postService.GetPostAsync(page, pageSize);
+            var response = await _postService.GetFeedAsync(page, perPage);
             return Ok(response);
         }
         [HttpGet]
-        [Route("{id}")]
+        [Route("{id:int}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetPostById(int id)
         {

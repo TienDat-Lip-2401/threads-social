@@ -1,11 +1,11 @@
 ﻿using Pharse2.Models;
 using Pharse2.Models.CommonModels;
+using Pharse2.Models.DtoModels;
 
 namespace Pharse2.Repositories.Interfaces
 {
     public interface IPostRepository
     {
-        Task<IEnumerable<Post>> GetAllAsync();
         Task<Post?> GetByIdAsync(int id);
         Task CreateAsync(Post post);
         Task UpdateAsync(Post post);
@@ -13,7 +13,8 @@ namespace Pharse2.Repositories.Interfaces
         Task<bool> SaveChangesAsync();
         Task<IEnumerable<User>> GetUsersLikePostByIdAsync(int id);
         Task<IEnumerable<Comment>> GetCommentsPostByIdAsync(int id);
-        Task<IEnumerable<Post>> GetPostsByUserIdAsync(int userId);
-        Task<PagedResult<Post>> GetPagedPostsAsync(int pageNumber, int pageSize);
+        Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId);
+        Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize);
+        Task<PostResponseDto?> GetPostDtoByIdAsync(int id);
     }
 }
