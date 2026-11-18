@@ -23,21 +23,17 @@ namespace Pharse2.Services.Implement
         }
         public async Task<ApiResponse> CreatePostAsync(PostRequestDto dto)
         {
-            if (string.IsNullOrEmpty(dto.Content))
+            if (string.IsNullOrWhiteSpace(dto.Content))
             {
                 return ApiResponse.Response(400, "Content cannot be empty");
             }
-            int currentId = _commonService.GetUserId();
-            //if(currentId !=dto.UserId)
-            //{
-            //    return ApiResponse.Response(403, "You do not have permission to access this user");
-            //}
-           
+            var now = DateTime.UtcNow;
             var newPost = new Post
             {
-                UserId = currentId,
-                Content = dto.Content,
-                CreatedAt = DateTime.UtcNow
+                UserId = _commonService.GetUserId(),
+                Content = dto.Content.Trim(),
+                CreatedAt = now,
+                UpdatedAt = now // không gán thì EF ghi 0001-01-01
             };
             await _postRepository.CreateAsync(newPost);
             var isSaved = await _postRepository.SaveChangesAsync();
@@ -45,7 +41,9 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(500, "Failed to create post");
             }
-            return ApiResponse.Response(201, "Post created successfully", newPost.Id);
+            // FE thêm bài mới lên đầu feed nên cần nguyên object bài viết (user, counts...)
+            var created = await _postRepository.GetPostDtoByIdAsync(newPost.Id);
+            return ApiResponse.Response(201, "Post created successfully", created);
         }
 
         public async Task<ApiResponse> DeletePostAsync(int id)

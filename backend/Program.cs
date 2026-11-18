@@ -27,7 +27,8 @@ builder.Services.AddControllersWithViews(options =>
             var errors = context.ModelState
                 .Where(e => e.Value?.Errors.Count > 0)
                 .ToDictionary(
-                    e => e.Key.StartsWith("$.") ? e.Key[2..] : e.Key,
+                    // form binding dùng tên C# (Content) → đưa về snake_case như JSON (content)
+                    e => JsonNamingPolicy.SnakeCaseLower.ConvertName(e.Key.StartsWith("$.") ? e.Key[2..] : e.Key),
                     e => e.Value!.Errors.Select(x => x.ErrorMessage).ToArray());
             return new UnprocessableEntityObjectResult(ApiResponse.ValidationError(errors));
         };

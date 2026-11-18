@@ -39,20 +39,13 @@ namespace Pharse2.Controllers
             }
             return Ok(response);
         }
+        // FE gửi multipart/form-data: content + media[] (file ảnh)
+        // shortcut: media[] chưa được lưu, Bước 6 (upload ảnh) sẽ xử lý
         [HttpPost]
-
-        public async Task<IActionResult> CreatePost(PostRequestDto dto)
+        public async Task<IActionResult> CreatePost([FromForm] PostRequestDto dto)
         {
             var response = await _postService.CreatePostAsync(dto);
-            if (response.StatusCode == 400)
-            {
-                return BadRequest(response);
-            }
-            if (response.StatusCode == 500)
-            {
-                return StatusCode(500, response);
-            }
-            return CreatedAtAction(nameof(GetPostById), new { id = response.Data }, response);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpDelete]
         [Route("{id}")]
