@@ -1,12 +1,37 @@
 
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Pharse2;
 using Pharse2.Filters;
 using Pharse2.MiddleWares;
+using Pharse2.Models.CommonModels;
 using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// FE dùng snake_case cho cả request và response (access_token, created_at, per_page...)
+builder.Services.AddControllersWithViews(options =>
+    {
+        // Key lỗi validate theo tên JSON (password_confirmation) thay vì tên C# (PasswordConfirmation)
+        options.ModelMetadataDetailsProviders.Add(new SystemTextJsonValidationMetadataProvider(JsonNamingPolicy.SnakeCaseLower));
+    })
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower)
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Lỗi model binding/validate trả về cùng dạng { message, errors: { field: [..] } } với status 422
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    e => e.Key.StartsWith("$.") ? e.Key[2..] : e.Key,
+                    e => e.Value!.Errors.Select(x => x.ErrorMessage).ToArray());
+            return new UnprocessableEntityObjectResult(ApiResponse.ValidationError(errors));
+        };
+    });
+// Response ghi trực tiếp từ middleware (WriteAsJsonAsync) cũng dùng snake_case
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
 builder.Services.AddSwaggerGen(options =>
 {
     options.OperationFilter<AllowAnonymousOperationFilter>();
