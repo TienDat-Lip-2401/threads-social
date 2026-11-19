@@ -34,6 +34,12 @@ namespace Pharse2.Models.DtoModels
         // Bài được trích dẫn (chỉ 1 tầng, không lồng tiếp)
         public QuotedPostDto? QuotedPost { get; set; }
 
+        // Chỉ có ở feed: người repost gần nhất, khi lần repost đó mới hơn lúc đăng bài
+        // (FE hiện "X đã đăng lại"). Các danh sách khác luôn null.
+        public PostUserDto? RepostedBy { get; set; }
+        private DateTime? _repostedAt;
+        public DateTime? RepostedAt { get => _repostedAt; set => _repostedAt = value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null; }
+
         // Dùng trong .Select(...) để EF đếm bằng SQL (COUNT) thay vì tải hết Comments/LikePosts.
         // viewerId: user đang xem (0 = khách) để tính is_liked / is_reposted.
         public static Expression<Func<Post, PostResponseDto>> Projection(int viewerId) => p => new PostResponseDto

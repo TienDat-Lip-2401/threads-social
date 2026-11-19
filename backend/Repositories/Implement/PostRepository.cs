@@ -71,13 +71,55 @@ namespace Pharse2.Repositories.Implement
         }
 
         // Feed: bài mới nhất lên đầu
+        // Feed: mỗi bài 1 lần, xếp theo mốc hoạt động mới nhất = max(lúc đăng, lần repost gần nhất).
+        // Repost làm bài "nổi lên" kèm người repost gần nhất (RepostedBy).
+        // shortcut: feed chung của mọi người; khi có follow (#6) chỉ tính repost của người mình theo dõi
         public async Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize, int viewerId)
         {
-            return await _context.Posts
+            // B1: thứ tự + phân trang (chỉ lấy id và mốc thời gian)
+            var rows = await _context.Posts
                 .Where(p => !p.DeleteFlg)
-                .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
-                .Select(PostResponseDto.Projection(viewerId))
+                .Select(p => new { p.Id, p.CreatedAt, LastRepostAt = p.Reposts.Max(r => (DateTime?)r.CreatedAt) })
+                .Select(x => new
+                {
+                    x.Id,
+                    IsBumped = x.LastRepostAt != null && x.LastRepostAt > x.CreatedAt,
+                    SortAt = x.LastRepostAt != null && x.LastRepostAt > x.CreatedAt ? x.LastRepostAt.Value : x.CreatedAt,
+                })
+                .OrderByDescending(x => x.SortAt).ThenByDescending(x => x.Id)
                 .ToPageResultAsync(pageNumber, pageSize);
+
+            // B2: dữ liệu đầy đủ của các bài trong trang
+            var posts = (await GetPostDtosByIdsAsync(rows.Items.Select(r => r.Id), viewerId)).ToDictionary(p => p.Id);
+
+            // B3: người repost gần nhất của các bài được repost "đẩy lên"
+            // shortcut: lấy mọi repost của các bài này rồi chọn mới nhất trong bộ nhớ (ổn khi mỗi bài ít repost)
+            var bumpedIds = rows.Items.Where(r => r.IsBumped).Select(r => r.Id).ToList();
+            var latestReposts = (await _context.Reposts
+                    .Where(r => bumpedIds.Contains(r.PostId))
+                    .Select(r => new
+                    {
+                        r.PostId,
+                        r.CreatedAt,
+                        User = new PostUserDto { Id = r.User.Id, Username = r.User.Username, Name = r.User.Name, AvatarUrl = r.User.AvatarPath },
+                    })
+                    .ToListAsync())
+                .GroupBy(r => r.PostId)
+                .ToDictionary(g => g.Key, g => g.MaxBy(r => r.CreatedAt)!);
+
+            var items = rows.Items
+                .Where(r => posts.ContainsKey(r.Id)) // bài vừa bị xóa giữa các query → bỏ
+                .Select(r =>
+                {
+                    var dto = posts[r.Id];
+                    if (latestReposts.TryGetValue(r.Id, out var repost))
+                    {
+                        dto.RepostedBy = repost.User;
+                        dto.RepostedAt = repost.CreatedAt;
+                    }
+                    return dto;
+                }).ToList();
+            return new PagedResult<PostResponseDto>(items, rows.TotalItems, rows.CurrentPage, rows.PageSize);
         }
 
         // Trang hồ sơ: bài của 1 user, mới nhất lên đầu

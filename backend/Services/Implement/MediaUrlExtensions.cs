@@ -12,6 +12,10 @@ namespace Pharse2.Services.Implement
             if (post == null) return null;
             post.MediaUrls = storage.ToPublicUrls(post.MediaUrls);
             post.User.AvatarUrl = storage.ToPublicUrl(post.User.AvatarUrl);
+            if (post.RepostedBy != null)
+            {
+                post.RepostedBy.AvatarUrl = storage.ToPublicUrl(post.RepostedBy.AvatarUrl);
+            }
             if (post.QuotedPost != null)
             {
                 post.QuotedPost.MediaUrls = storage.ToPublicUrls(post.QuotedPost.MediaUrls);
