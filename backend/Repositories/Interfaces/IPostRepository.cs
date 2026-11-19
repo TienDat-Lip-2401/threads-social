@@ -18,5 +18,7 @@ namespace Pharse2.Repositories.Interfaces
         Task<PagedResult<PostResponseDto>> GetUserPostsAsync(int userId, int pageNumber, int pageSize, int viewerId);
         Task<int> CountByUserAsync(int userId);
         Task<PagedResult<PostResponseDto>> GetUserRepostsAsync(int userId, int pageNumber, int pageSize, int viewerId);
+        Task<PagedResult<PostResponseDto>> GetUserMediaPostsAsync(int userId, int pageNumber, int pageSize, int viewerId);
+        Task<List<PostResponseDto>> GetPostDtosByIdsAsync(IEnumerable<int> ids, int viewerId);
     }
 }

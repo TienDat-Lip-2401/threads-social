@@ -17,5 +17,6 @@ namespace Pharse2.Repositories.Interfaces
         Task<IEnumerable<LikeComment>> GetLikesCommentById(int id);
         Task<PagedResult<PostCommentDto>> GetPostCommentsAsync(int postId, int pageNumber, int pageSize);
         Task<PostCommentDto?> GetCommentDtoByIdAsync(int id);
+        Task<PagedResult<PostCommentDto>> GetUserCommentsAsync(int userId, int pageNumber, int pageSize);
     }
 }

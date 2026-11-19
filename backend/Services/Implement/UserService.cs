@@ -1,6 +1,7 @@
 ﻿using Pharse2.Models;
 using Pharse2.Models.CommonModels;
 using Pharse2.Models.DtoModels;
+using Pharse2.Models.DtoModels.Comment;
 using Pharse2.Models.DtoModels.User;
 using Pharse2.Repositories.Interfaces;
 using Pharse2.Services.Interfaces;
@@ -14,10 +15,12 @@ namespace Pharse2.Services.Implement
 
         private readonly IUserRepository _userRepository;
         private readonly IPostRepository _postRepository;
+        private readonly ICommentRepository _commentRepository;
         private readonly IMediaStorage _mediaStorage;
         private readonly ICommonService _commonService;
-        public UserService(IUserRepository userRepository, IPostRepository postRepository, IMediaStorage mediaStorage, ICommonService commonService)
+        public UserService(IUserRepository userRepository, IPostRepository postRepository, ICommentRepository commentRepository, IMediaStorage mediaStorage, ICommonService commonService)
         {
+            _commentRepository = commentRepository;
             _userRepository = userRepository;
             _postRepository = postRepository;
             _mediaStorage = mediaStorage;
@@ -128,7 +131,43 @@ namespace Pharse2.Services.Implement
         public Task<ApiResponse> GetUserRepostsAsync(string username, int pageNumber, int pageSize) =>
             GetUserPagedPostsAsync(username, pageNumber, pageSize, _postRepository.GetUserRepostsAsync);
 
-        // Dùng chung cho tab Threads / Reposts: tìm user theo username, chuẩn hóa phân trang, đổi URL ảnh
+        // FE: GET users/{username}/media?page=&per_page= → bài của user có ảnh
+        public Task<ApiResponse> GetUserMediaAsync(string username, int pageNumber, int pageSize) =>
+            GetUserPagedPostsAsync(username, pageNumber, pageSize, _postRepository.GetUserMediaPostsAsync);
+
+        // FE: GET users/{username}/replies?page=&per_page= → comment của user, mỗi comment kèm bài gốc
+        public async Task<ApiResponse> GetUserRepliesAsync(string username, int pageNumber, int pageSize)
+        {
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null || user.DeleteFlg)
+            {
+                return ApiResponse.Response(404, "Không tìm thấy người dùng.");
+            }
+            (pageNumber, pageSize) = NormalizePage(pageNumber, pageSize);
+            var page = await _commentRepository.GetUserCommentsAsync(user.Id, pageNumber, pageSize);
+            // Query thứ 2 lấy bài gốc của cả trang (repo đã lọc comment của bài bị xóa)
+            var posts = (await _postRepository.GetPostDtosByIdsAsync(page.Items.Select(c => c.ParentId), _commonService.GetUserId()))
+                .ToDictionary(p => p.Id, p => p.WithPublicUrls(_mediaStorage)!);
+            var items = page.Items
+                .Where(c => posts.ContainsKey(c.ParentId)) // bài vừa bị xóa giữa 2 query → bỏ
+                .Select(c =>
+                {
+                    c.WithPublicUrls(_mediaStorage);
+                    return new UserReplyDto
+                    {
+                        Id = c.Id, ParentId = c.ParentId, Content = c.Content,
+                        CreatedAt = c.CreatedAt, UpdatedAt = c.UpdatedAt, User = c.User,
+                        MediaUrls = c.MediaUrls, LikesCount = c.LikesCount, RepliesCount = c.RepliesCount,
+                        Post = posts[c.ParentId],
+                    };
+                }).ToList();
+            return ApiResponse.Paged(new PagedResult<UserReplyDto>(items, page.TotalItems, page.CurrentPage, page.PageSize), "Lấy danh sách thành công!");
+        }
+
+        private static (int, int) NormalizePage(int pageNumber, int pageSize) =>
+            (Math.Max(1, pageNumber), pageSize < 1 ? 10 : Math.Min(pageSize, 50));
+
+        // Dùng chung cho tab Threads / Reposts / Media: tìm user theo username, chuẩn hóa phân trang, đổi URL ảnh
         private async Task<ApiResponse> GetUserPagedPostsAsync(string username, int pageNumber, int pageSize,
             Func<int, int, int, int, Task<PagedResult<PostResponseDto>>> query)
         {
@@ -137,8 +176,7 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(404, "Không tìm thấy người dùng.");
             }
-            pageNumber = Math.Max(1, pageNumber);
-            pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50);
+            (pageNumber, pageSize) = NormalizePage(pageNumber, pageSize);
             var page = await query(user.Id, pageNumber, pageSize, _commonService.GetUserId());
             page.Items.ForEach(p => p.WithPublicUrls(_mediaStorage));
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");

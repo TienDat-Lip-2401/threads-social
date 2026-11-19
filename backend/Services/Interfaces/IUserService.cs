@@ -11,5 +11,7 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> GetProfileAsync(string username);
         Task<ApiResponse> GetUserPostsAsync(string username, int pageNumber, int pageSize);
         Task<ApiResponse> GetUserRepostsAsync(string username, int pageNumber, int pageSize);
+        Task<ApiResponse> GetUserMediaAsync(string username, int pageNumber, int pageSize);
+        Task<ApiResponse> GetUserRepliesAsync(string username, int pageNumber, int pageSize);
     }
 }

@@ -81,6 +81,16 @@ namespace Pharse2.Repositories.Implement
                 .ToPageResultAsync(pageNumber, pageSize);
         }
 
+        // Tab Replies: mọi comment của user (cả trả lời comment), mới nhất lên đầu; bỏ comment của bài đã xóa
+        public async Task<PagedResult<PostCommentDto>> GetUserCommentsAsync(int userId, int pageNumber, int pageSize)
+        {
+            return await _context.Comments
+                .Where(c => c.UserId == userId && !c.DeleteFlg && !c.Post.DeleteFlg)
+                .OrderByDescending(c => c.CreatedAt).ThenByDescending(c => c.Id)
+                .Select(PostCommentDto.Projection)
+                .ToPageResultAsync(pageNumber, pageSize);
+        }
+
         public async Task<PostCommentDto?> GetCommentDtoByIdAsync(int id)
         {
             return await _context.Comments

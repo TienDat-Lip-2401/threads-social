@@ -40,5 +40,23 @@ namespace Pharse2.Controllers
             var response = await _userService.GetUserRepostsAsync(username, page, perPage);
             return StatusCode(response.StatusCode, response);
         }
+
+        // FE: GET users/{username}/replies?page=1&per_page=10
+        [HttpGet("{username}/replies")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetUserReplies(string username, [FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10)
+        {
+            var response = await _userService.GetUserRepliesAsync(username, page, perPage);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        // FE: GET users/{username}/media?page=1&per_page=10
+        [HttpGet("{username}/media")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetUserMedia(string username, [FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10)
+        {
+            var response = await _userService.GetUserMediaAsync(username, page, perPage);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }

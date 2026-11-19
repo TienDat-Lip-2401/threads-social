@@ -101,6 +101,26 @@ namespace Pharse2.Repositories.Implement
                 .ToPageResultAsync(pageNumber, pageSize);
         }
 
+        // Tab Media: bài của user có ít nhất 1 ảnh của bài (không tính ảnh trong comment)
+        public async Task<PagedResult<PostResponseDto>> GetUserMediaPostsAsync(int userId, int pageNumber, int pageSize, int viewerId)
+        {
+            return await _context.Posts
+                .Where(p => p.UserId == userId && !p.DeleteFlg && p.Media.Any(m => m.CommentId == null && !m.DeleteFlg))
+                .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
+                .Select(PostResponseDto.Projection(viewerId))
+                .ToPageResultAsync(pageNumber, pageSize);
+        }
+
+        // Lấy nhiều bài 1 lần (tab Replies: bài gốc của các comment trong trang)
+        public async Task<List<PostResponseDto>> GetPostDtosByIdsAsync(IEnumerable<int> ids, int viewerId)
+        {
+            var idList = ids.Distinct().ToList();
+            return await _context.Posts
+                .Where(p => idList.Contains(p.Id) && !p.DeleteFlg)
+                .Select(PostResponseDto.Projection(viewerId))
+                .ToListAsync();
+        }
+
         public async Task<int> CountByUserAsync(int userId)
         {
             return await _context.Posts.CountAsync(p => p.UserId == userId && !p.DeleteFlg);
