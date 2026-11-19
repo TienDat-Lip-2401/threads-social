@@ -29,6 +29,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Media> Media { get; set; }
 
+    public virtual DbSet<UserToken> UserTokens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Comment>(entity =>
@@ -141,6 +143,20 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Comment).WithMany(p => p.Media)
                 .HasForeignKey(d => d.CommentId)
                 .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<UserToken>(entity =>
+        {
+            entity.ToTable("UserToken");
+
+            entity.Property(e => e.Type).HasMaxLength(30);
+            entity.Property(e => e.TokenHash).HasMaxLength(64); // SHA256 dạng hex
+
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -4,6 +4,9 @@ using Pharse2.Models.DtoModels.Auth;
 using Pharse2.Models.EntityModels;
 using Pharse2.Repositories.Interfaces;
 using Pharse2.Services.Interfaces;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Net;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace Pharse2.Services.Implement
@@ -15,13 +18,25 @@ namespace Pharse2.Services.Implement
         private readonly ITokenService _tokenService;
         private readonly ICommonService _commonService;
         private readonly ILogger<AuthService> _logger;
+        private readonly IUserTokenRepository _userTokenRepository;
+        private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
+
+        // Dùng chung cho đăng ký và đặt lại mật khẩu
+        private const string PasswordRegex = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
+        private const string PasswordRuleMessage = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&)!";
+        private static readonly TimeSpan ResetTokenLifetime = TimeSpan.FromMinutes(30);
+        private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);
 
         public AuthService(
             IUserRepository userRepository,
             IRefreshTokenRepository refreshTokenRepository,
             ITokenService tokenService,
             ICommonService commonService,
-            ILogger<AuthService> logger
+            ILogger<AuthService> logger,
+            IUserTokenRepository userTokenRepository,
+            IEmailSender emailSender,
+            IConfiguration configuration
             )
         {
             _userRepository = userRepository;
@@ -29,6 +44,9 @@ namespace Pharse2.Services.Implement
             _tokenService = tokenService;
             _commonService = commonService;
             _logger = logger;
+            _userTokenRepository = userTokenRepository;
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
         public async Task<ApiResponse> LoginAsync(LoginRequestDto dto, string? ipAddress, string? userAgent)
         {
@@ -181,9 +199,8 @@ namespace Pharse2.Services.Implement
             if (await _userRepository.ExistsByUserNameAsync(dto.Username))
                 errors["username"] = new[] { "Tên đăng nhập đã tồn tại!" };
 
-            var passwordRegex = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
-            if (!Regex.IsMatch(dto.Password, passwordRegex))
-                errors["password"] = new[] { "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&)!" };
+            if (!Regex.IsMatch(dto.Password, PasswordRegex))
+                errors["password"] = new[] { PasswordRuleMessage };
 
             if (dto.PasswordConfirmation != dto.Password)
                 errors["password_confirmation"] = new[] { "Mật khẩu xác nhận không khớp!" };
@@ -203,6 +220,106 @@ namespace Pharse2.Services.Implement
             await _userRepository.SaveChangesAsync();
             return ApiResponse.Response(201, "Đăng ký thành công!");
 
+        }
+
+        // FE: POST auth/forgot-password { email }
+        // Luôn trả 200 (kể cả email không tồn tại) để không lộ email nào đã đăng ký.
+        public async Task<ApiResponse> ForgotPasswordAsync(ForgotPasswordRequestDto dto)
+        {
+            const string message = "Nếu email đã đăng ký, chúng tôi đã gửi link đặt lại mật khẩu. Vui lòng kiểm tra hộp thư!";
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                return ApiResponse.ValidationError(new() { ["email"] = ["Vui lòng nhập email!"] });
+            }
+
+            var user = await _userRepository.GetByEmailAsync(dto.Email.Trim());
+            if (user == null || user.DeleteFlg)
+            {
+                return ApiResponse.Response(200, message);
+            }
+
+            // Chặn bấm gửi liên tục: 60 giây mới gửi lại 1 email
+            var latest = await _userTokenRepository.GetLatestAsync(user.Id, UserToken.ResetPassword);
+            if (latest != null && latest.CreatedAt > DateTime.UtcNow - ResendCooldown)
+            {
+                return ApiResponse.Response(200, message);
+            }
+
+            // Token mới thay thế các link cũ
+            await _userTokenRepository.InvalidateAllAsync(user.Id, UserToken.ResetPassword);
+            var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+            var now = DateTime.UtcNow;
+            await _userTokenRepository.CreateAsync(new UserToken
+            {
+                UserId = user.Id,
+                Type = UserToken.ResetPassword,
+                TokenHash = _tokenService.ComputeSha256Hash(rawToken),
+                ExpiresAt = now + ResetTokenLifetime,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+            await _userTokenRepository.SaveChangesAsync();
+
+            var frontendBaseUrl = (_configuration["App:FrontendBaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
+            var link = $"{frontendBaseUrl}/reset-password?token={rawToken}";
+            try
+            {
+                await _emailSender.SendAsync(user.Email, "Đặt lại mật khẩu Threads",
+                    $"<p>Xin chào <b>{WebUtility.HtmlEncode(user.Username)}</b>,</p>" +
+                    $"<p>Bấm vào link dưới đây để đặt lại mật khẩu (hết hạn sau {ResetTokenLifetime.TotalMinutes} phút):</p>" +
+                    $"<p><a href=\"{link}\">{link}</a></p>" +
+                    "<p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>");
+            }
+            catch (Exception ex)
+            {
+                // Không báo lỗi ra ngoài (tránh lộ email tồn tại); ghi log để kiểm tra cấu hình SMTP
+                _logger.LogError(ex, "Gửi email đặt lại mật khẩu thất bại cho User ID: {UserId}", user.Id);
+            }
+            return ApiResponse.Response(200, message);
+        }
+
+        // FE: POST auth/reset-password { token, email, password, password_confirmation }
+        public async Task<ApiResponse> ResetPasswordAsync(ResetPasswordRequestDto dto)
+        {
+            var errors = new Dictionary<string, string[]>();
+            if (string.IsNullOrEmpty(dto.Password) || !Regex.IsMatch(dto.Password, PasswordRegex))
+                errors["password"] = new[] { PasswordRuleMessage };
+            if (dto.PasswordConfirmation != dto.Password)
+                errors["password_confirmation"] = new[] { "Mật khẩu xác nhận không khớp!" };
+            if (errors.Count > 0)
+            {
+                return ApiResponse.ValidationError(errors);
+            }
+
+            var token = string.IsNullOrWhiteSpace(dto.Token) ? null
+                : await _userTokenRepository.GetValidAsync(_tokenService.ComputeSha256Hash(dto.Token), UserToken.ResetPassword);
+            if (token == null || token.User.DeleteFlg
+                || !string.Equals(token.User.Email, dto.Email?.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                return ApiResponse.Response(400, "Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn!");
+            }
+
+            using var transaction = await _userRepository.BeginTransactionAsync();
+            try
+            {
+                var now = DateTime.UtcNow;
+                token.User.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                token.User.UpdatedAt = now;
+                token.UsedAt = now;
+                token.UpdatedAt = now;
+                await _userTokenRepository.SaveChangesAsync();
+                await _userTokenRepository.InvalidateAllAsync(token.UserId, UserToken.ResetPassword);
+                // Đổi mật khẩu → đăng xuất mọi thiết bị
+                await _refreshTokenRepository.RevokeAllUserTokensAsync(token.UserId);
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Lỗi đặt lại mật khẩu cho User ID: {UserId}", token.UserId);
+                return ApiResponse.Response(500, "Lỗi hệ thống khi đặt lại mật khẩu!");
+            }
+            return ApiResponse.Response(200, "Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.");
         }
 
         public async Task<ApiResponse> RevokeAllSessionsAsync()

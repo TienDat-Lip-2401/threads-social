@@ -22,4 +22,5 @@ public partial class User : EntityBaseModel
 
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public virtual ICollection<UserToken> UserTokens { get; set; } = new List<UserToken>();
 }

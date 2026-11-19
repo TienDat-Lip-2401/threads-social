@@ -157,6 +157,52 @@ namespace Pharse2.Migrations
                     b.ToTable("RefreshToken");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.EntityModels.UserToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DeleteFlg")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserToken", (string)null);
+                });
+
             modelBuilder.Entity("Pharse2.Models.Media", b =>
                 {
                     b.Property<int>("Id")
@@ -353,6 +399,17 @@ namespace Pharse2.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.EntityModels.UserToken", b =>
+                {
+                    b.HasOne("Pharse2.Models.User", "User")
+                        .WithMany("UserTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Pharse2.Models.Media", b =>
                 {
                     b.HasOne("Pharse2.Models.Comment", "Comment")
@@ -411,6 +468,8 @@ namespace Pharse2.Migrations
                     b.Navigation("Posts");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("UserTokens");
                 });
 #pragma warning restore 612, 618
         }

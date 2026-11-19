@@ -45,6 +45,20 @@ namespace Pharse2.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto dto)
+        {
+            var response = await _authService.ForgotPasswordAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto)
+        {
+            var response = await _authService.ResetPasswordAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

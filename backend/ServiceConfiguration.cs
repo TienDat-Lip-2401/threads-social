@@ -34,6 +34,7 @@ namespace Pharse2
             services.AddScoped<ICommonService, CommonService>();
             services.AddHttpContextAccessor();
             services.AddScoped<IMediaStorage, LocalMediaStorage>();
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
             //Repositories
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
@@ -41,6 +42,7 @@ namespace Pharse2
             services.AddScoped<ILikeCommentRepository, LikeCommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserTokenRepository, UserTokenRepository>();
             //Logging
             Log.Logger = new LoggerConfiguration().
                 // 1. Nâng mức mặc định lên Warning (để chặn hết Info của Microsoft, EF...)

@@ -10,5 +10,7 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> RefreshTokenAsync(RefreshTokenRequestDto dto, string? ipAddress, string? userAgent);
         Task<ApiResponse> LogoutAsync();
         Task<ApiResponse> RevokeAllSessionsAsync();
+        Task<ApiResponse> ForgotPasswordAsync(ForgotPasswordRequestDto dto);
+        Task<ApiResponse> ResetPasswordAsync(ResetPasswordRequestDto dto);
     }
 }

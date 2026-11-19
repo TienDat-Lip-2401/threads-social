@@ -1,6 +1,7 @@
 # Chạy: docker compose up -d --build   (cần file .env, copy từ .env.example)
 # API:     http://localhost:5080/api/   (Swagger: http://localhost:5080/swagger; đổi cổng bằng API_PORT)
 # SQL:     localhost,14333  user sa  (mật khẩu MSSQL_SA_PASSWORD trong .env)
+# Email:   http://localhost:8025 (Mailpit)
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -28,10 +29,27 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=Pharse2;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;"
       JwtSettings__Key: ${JWT_KEY:?Thiếu JWT_KEY trong .env}
       Database__MigrateOnStartup: "true"
+      # SMTP: mặc định gửi vào Mailpit (hộp thư giả). Gửi email thật: đặt các biến SMTP_* trong .env
+      Smtp__Host: ${SMTP_HOST:-mailpit}
+      Smtp__Port: ${SMTP_PORT:-1025}
+      Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-false}
+      Smtp__Username: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__From: ${SMTP_FROM:-no-reply@threads.local}
+      Smtp__FromName: ${SMTP_FROM_NAME:-Threads}
+      App__FrontendBaseUrl: ${FRONTEND_BASE_URL:-http://localhost:5173}
     ports:
       - "${API_PORT:-5080}:8080"
     volumes:
       - uploads:/app/wwwroot/uploads   # ảnh upload không mất khi build lại container
+    restart: unless-stopped
+
+  # Hộp thư giả cho dev: mọi email backend gửi đều nằm ở đây, không gửi ra ngoài thật
+  mailpit:
+    image: axllent/mailpit:v1.20.5
+    ports:
+      - "8025:8025"   # giao diện xem email: http://localhost:8025
+      - "1025:1025"   # SMTP (dùng khi chạy backend bằng Visual Studio: Smtp:Host=localhost)
     restart: unless-stopped
 
 volumes:
