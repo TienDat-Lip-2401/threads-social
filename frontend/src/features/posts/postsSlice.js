@@ -5,6 +5,7 @@ import {
     getPosts,
     getReplies,
     loadMorePosts,
+    toggleLikePost,
 } from '@/services/posts';
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -44,6 +45,95 @@ const initialState = {
     },
 };
 
+// ========================================
+// 💡 Like: đảo trạng thái ngay trên UI (dùng cho optimistic update và rollback)
+// ========================================
+const applyToggleLike = (state, postId) => {
+    // INTERACTION CACHE
+    // Bước 1: Kiểm tra xem đã track interaction của postId này chưa
+    if (!state.interactions[postId]) {
+        // Nếu là lần đầu click chưa có profile interaction -> phải tạo mới profile từ post data
+        const post = state.posts.find((post) => post.id === postId);
+        state.interactions[postId] = {
+            isLiked: Boolean(post?.is_liked),
+            likeCount: post?.likes_count || 0,
+            isReposted: false,
+            repostCount: post?.reposts_and_quotes_count || 0,
+        };
+    }
+
+    // Bước 2: Toggle trạng thái LIKE
+    const interaction = state.interactions[postId];
+    interaction.isLiked = !interaction.isLiked;
+
+    // 🔧 FIX: Đảm bảo likeCount không bị âm
+    if (interaction.isLiked) {
+        interaction.likeCount += 1;
+    } else {
+        interaction.likeCount = Math.max(0, interaction.likeCount - 1);
+    }
+
+    // Bước 3: Update likedPostIds array cho localStorage persistence
+    const likeIndex = state.likedPostIds.indexOf(postId);
+
+    if (interaction.isLiked && likeIndex === -1) {
+        state.likedPostIds.push(postId);
+
+        // LƯU FULL POST DATA cho LIKED
+        const post = state.posts.find((p) => p.id === postId);
+        if (post && !state.likedPosts.find((p) => p.id === postId)) {
+            state.likedPosts.push(post);
+        }
+    }
+
+    if (!interaction.isLiked && likeIndex !== -1) {
+        state.likedPostIds.splice(likeIndex, 1);
+
+        // XÓA POST DATA khỏi LIKED
+        const postIndex = state.likedPosts.findIndex(
+            (p) => p.id === postId,
+        );
+        if (postIndex !== -1) {
+            state.likedPosts.splice(postIndex, 1);
+        }
+    }
+};
+
+// Thêm/bỏ post khỏi danh sách đã like (likedPostIds + likedPosts)
+const setLikedList = (state, post, isLiked) => {
+    const likeIndex = state.likedPostIds.indexOf(post.id);
+    if (isLiked && likeIndex === -1) state.likedPostIds.push(post.id);
+    if (!isLiked && likeIndex !== -1) state.likedPostIds.splice(likeIndex, 1);
+
+    const postIndex = state.likedPosts.findIndex((p) => p.id === post.id);
+    if (isLiked) {
+        if (postIndex !== -1) state.likedPosts[postIndex] = post;
+        else state.likedPosts.push(post);
+    } else if (postIndex !== -1) {
+        state.likedPosts.splice(postIndex, 1);
+    }
+};
+
+// Đồng bộ interaction từ dữ liệu server: like lấy theo server (is_liked, likes_count)
+// để không bị cache localStorage cũ / tài khoản khác ghi đè.
+// Repost vẫn lưu ở máy (chưa có API).
+const syncInteraction = (state, post) => {
+    const postId = post.id;
+    const prev = state.interactions[postId];
+    const isLiked = Boolean(post.is_liked);
+    state.interactions[postId] = {
+        isLiked,
+        likeCount: post.likes_count || 0,
+        isReposted: prev
+            ? prev.isReposted
+            : state.repostedPostIds.includes(postId),
+        repostCount: prev
+            ? prev.repostCount
+            : post.reposts_and_quotes_count || 0,
+    };
+    setLikedList(state, post, isLiked);
+};
+
 export const postsSlice = createSlice({
     name: 'posts',
     initialState,
@@ -53,56 +143,7 @@ export const postsSlice = createSlice({
         // ========================================
 
         toggleLikeOptimistic: (state, action) => {
-            const postId = action.payload;
-
-            // INTERACTION CACHE
-            // Bước 1: Kiểm tra xem đã track interaction của postId này chưa
-            if (!state.interactions[postId]) {
-                // Nếu là lần đầu click chưa có profile interaction -> phải tạo mới profile từ post data
-                const post = state.posts.find((post) => post.id === postId);
-                state.interactions[postId] = {
-                    isLiked: false,
-                    likeCount: post?.likes_count || 0,
-                    isReposted: false,
-                    repostCount: post?.reposts_and_quotes_count || 0,
-                };
-            }
-
-            // Bước 2: Toggle trạng thái LIKE
-            const interaction = state.interactions[postId];
-            interaction.isLiked = !interaction.isLiked;
-
-            // 🔧 FIX: Đảm bảo likeCount không bị âm
-            if (interaction.isLiked) {
-                interaction.likeCount += 1;
-            } else {
-                interaction.likeCount = Math.max(0, interaction.likeCount - 1);
-            }
-
-            // Bước 3: Update likedPostIds array cho localStorage persistence
-            const likeIndex = state.likedPostIds.indexOf(postId);
-
-            if (interaction.isLiked && likeIndex === -1) {
-                state.likedPostIds.push(postId);
-
-                // LƯU FULL POST DATA cho LIKED
-                const post = state.posts.find((p) => p.id === postId);
-                if (post && !state.likedPosts.find((p) => p.id === postId)) {
-                    state.likedPosts.push(post);
-                }
-            }
-
-            if (!interaction.isLiked && likeIndex !== -1) {
-                state.likedPostIds.splice(likeIndex, 1);
-
-                // XÓA POST DATA khỏi LIKED
-                const postIndex = state.likedPosts.findIndex(
-                    (p) => p.id === postId,
-                );
-                if (postIndex !== -1) {
-                    state.likedPosts.splice(postIndex, 1);
-                }
-            }
+            applyToggleLike(state, action.payload);
         },
 
         // 💡 Rollback khi API fail
@@ -155,7 +196,7 @@ export const postsSlice = createSlice({
             if (!state.interactions[postId]) {
                 const post = state.posts.find((p) => p.id === postId);
                 state.interactions[postId] = {
-                    isLiked: false,
+                    isLiked: Boolean(post?.is_liked),
                     likeCount: post?.likes_count || 0,
                     isReposted: false,
                     repostCount: post?.reposts_and_quotes_count || 0,
@@ -266,42 +307,11 @@ export const postsSlice = createSlice({
                 // Calculate hasMore: current_page < last_page
                 state.hasMore = pagination.current_page < pagination.last_page;
 
-                // CHỈ BUILD INTERACTION CHO POST CHƯA CÓ
+                // Like lấy theo server, repost giữ theo localStorage
                 data.forEach((post) => {
                     const postId = post.id;
 
-                    // ✅ KHÔNG GHI ĐÈ nếu interaction đã tồn tại
-                    if (!state.interactions[postId]) {
-                        // 1: Check user đã like post này chưa từ localStorage
-                        const isLiked = state.likedPostIds.includes(postId);
-
-                        // 2: Check user đã repost post này chưa từ localStorage
-                        const isReposted =
-                            state.repostedPostIds.includes(postId);
-
-                        // 3: Build interaction object = API data + localStorage data
-                        state.interactions[postId] = {
-                            isLiked, // Từ localStorage
-                            likeCount: post.likes_count || 0, // Từ API
-                            isReposted, // Từ localStorage
-                            repostCount: post.reposts_and_quotes_count || 0, // Từ API
-                        };
-                    }
-
-                    // UPDATE full post data trong likedPosts nếu có
-                    const isLiked = state.likedPostIds.includes(postId);
-                    if (isLiked) {
-                        const existingIndex = state.likedPosts.findIndex(
-                            (p) => p.id === postId,
-                        );
-                        if (existingIndex !== -1) {
-                            // Update với data mới từ API (giữ post fresh)
-                            state.likedPosts[existingIndex] = post;
-                        } else {
-                            // Thêm mới nếu chưa có (edge case: user liked trên device khác)
-                            state.likedPosts.push(post);
-                        }
-                    }
+                    syncInteraction(state, post);
 
                     // UPDATE full post data trong repostedPosts nếu có
                     const isReposted = state.repostedPostIds.includes(postId);
@@ -342,40 +352,11 @@ export const postsSlice = createSlice({
                 state.currentPage = pagination.current_page;
                 state.hasMore = pagination.current_page < pagination.last_page;
 
-                // CHỈ BUILD INTERACTION CHO POST CHƯA CÓ
+                // Like lấy theo server, repost giữ theo localStorage
                 data.forEach((post) => {
                     const postId = post.id;
 
-                    // ✅ KHÔNG GHI ĐÈ nếu interaction đã tồn tại
-                    if (!state.interactions[postId]) {
-                        // 1: Check user đã like post này chưa từ localStorage
-                        const isLiked = state.likedPostIds.includes(postId);
-
-                        // 2: Check user đã repost post này chưa từ localStorage
-                        const isReposted =
-                            state.repostedPostIds.includes(postId);
-
-                        // 3: Build interaction object = API data + localStorage data
-                        state.interactions[postId] = {
-                            isLiked, // Từ localStorage
-                            likeCount: post.likes_count || 0, // Từ API
-                            isReposted, // Từ localStorage
-                            repostCount: post.reposts_and_quotes_count || 0, // Từ API
-                        };
-                    }
-
-                    // UPDATE full post data trong likedPosts
-                    const isLiked = state.likedPostIds.includes(postId);
-                    if (isLiked) {
-                        const existingIndex = state.likedPosts.findIndex(
-                            (p) => p.id === postId,
-                        );
-                        if (existingIndex !== -1) {
-                            state.likedPosts[existingIndex] = post;
-                        } else {
-                            state.likedPosts.push(post);
-                        }
-                    }
+                    syncInteraction(state, post);
 
                     // UPDATE full post data trong repostedPosts
                     const isReposted = state.repostedPostIds.includes(postId);
@@ -411,32 +392,8 @@ export const postsSlice = createSlice({
                     state.posts.unshift(post);
                 }
 
-                // 🔧 FIX: CHỈ BUILD NẾU CHƯA CÓ INTERACTION
                 const postId = post.id;
-                if (!state.interactions[postId]) {
-                    const isLiked = state.likedPostIds.includes(postId);
-                    const isReposted = state.repostedPostIds.includes(postId);
-
-                    state.interactions[postId] = {
-                        isLiked,
-                        likeCount: post.likes_count || 0,
-                        isReposted,
-                        repostCount: post.reposts_and_quotes_count || 0,
-                    };
-                }
-
-                // UPDATE full post data
-                const isLiked = state.likedPostIds.includes(postId);
-                if (isLiked) {
-                    const existingIndex = state.likedPosts.findIndex(
-                        (p) => p.id === postId,
-                    );
-                    if (existingIndex !== -1) {
-                        state.likedPosts[existingIndex] = post;
-                    } else {
-                        state.likedPosts.push(post);
-                    }
-                }
+                syncInteraction(state, post);
 
                 const isReposted = state.repostedPostIds.includes(postId);
                 if (isReposted) {
@@ -451,6 +408,30 @@ export const postsSlice = createSlice({
                 }
             })
             .addCase(getPostById.rejected, (state, action) => {
+                state.error = action.payload;
+            });
+
+        // ============================================
+        //  TOGGLE LIKE (optimistic → đồng bộ server / rollback)
+        // ============================================
+        builder
+            .addCase(toggleLikePost.pending, (state, action) => {
+                applyToggleLike(state, action.meta.arg);
+            })
+            .addCase(toggleLikePost.fulfilled, (state, action) => {
+                const { postId, is_liked, likes_count } = action.payload;
+                const interaction = state.interactions[postId];
+                if (interaction) {
+                    interaction.isLiked = is_liked;
+                    interaction.likeCount = likes_count;
+                }
+                const post =
+                    state.posts.find((p) => p.id === postId) ||
+                    state.likedPosts.find((p) => p.id === postId);
+                if (post) setLikedList(state, post, is_liked);
+            })
+            .addCase(toggleLikePost.rejected, (state, action) => {
+                applyToggleLike(state, action.meta.arg);
                 state.error = action.payload;
             });
 
@@ -473,13 +454,7 @@ export const postsSlice = createSlice({
                 state.totalPosts += 1;
 
                 // Build interaction cho post mới
-                const postId = newPost.id;
-                state.interactions[postId] = {
-                    isLiked: state.likedPostIds.includes(postId),
-                    likeCount: newPost.likes_count || 0,
-                    isReposted: state.repostedPostIds.includes(postId),
-                    repostCount: newPost.reposts_and_quotes_count || 0,
-                };
+                syncInteraction(state, newPost);
 
                 // Clear error nếu có
                 state.error = null;

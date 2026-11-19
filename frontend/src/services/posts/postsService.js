@@ -209,39 +209,23 @@ export const getReplies = createAsyncThunk(
 );
 
 // ========================================
-// 💡 Với API (uncomment khi backend ready)
+// 💡 TOGGLE LIKE: POST posts/{id}/like → { is_liked, likes_count }
+// UI đổi ngay ở toggleLikePost.pending, đồng bộ server ở fulfilled, rollback ở rejected (postsSlice)
 // ========================================
-// export const toggleLikePost = createAsyncThunk(
-//     'posts/toggleLike',
-//     async (postId, { dispatch, rejectWithValue }) => {
-//         // STEP 1: Optimistic update UI trước
-//         dispatch(postsSlice.actions.toggleLikeOptimistic(postId));
-
-//         try {
-//             // STEP 2: Call API
-//             const response = await http.post(`posts/${postId}/like`);
-
-//             // STEP 3: Success - sync with server data (optional)
-//             // dispatch(postsSlice.actions.syncInteractionFromServer({
-//             //     postId,
-//             //     isLiked: response.data.is_liked,
-//             //     likeCount: response.data.likes_count,
-//             //     ...
-//             // }));
-
-//             return response.data;
-
-//         } catch (error) {
-//             // STEP 4: Failed - rollback UI
-//             dispatch(postsSlice.actions.revertLikeOptimistic(postId));
-
-//             return rejectWithValue({
-//                 message: error.response?.data?.message || error.message,
-//                 status: error.response?.status,
-//             });
-//         }
-//     }
-// );
+export const toggleLikePost = createAsyncThunk(
+    'posts/toggleLike',
+    async (postId, { rejectWithValue }) => {
+        try {
+            const response = await http.post(`posts/${postId}/like`);
+            return { postId, ...response.data };
+        } catch (error) {
+            return rejectWithValue({
+                message: error.response?.data?.message || error.message,
+                status: error.response?.status,
+            });
+        }
+    },
+);
 
 // export const toggleRepostPost = createAsyncThunk(
 //     'posts/toggleRepost',

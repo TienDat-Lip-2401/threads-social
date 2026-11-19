@@ -104,7 +104,7 @@ export const useInteraction = (postId) => {
         const post = posts.find((post) => post.id === postId);
         if (post) {
             return {
-                isLiked: false,
+                isLiked: Boolean(post.is_liked),
                 likeCount: post.likes_count,
                 isReposted: false,
                 repostCount: post.reposts_and_quotes_count,

@@ -3,11 +3,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import copy from 'copy-to-clipboard';
 
-import {
-    toggleLikeOptimistic,
-    toggleRepostOptimistic,
-    useInteraction,
-} from '@/features/posts';
+import { toggleRepostOptimistic, useInteraction } from '@/features/posts';
+import { toggleLikePost } from '@/services/posts';
 import loveIcon from '@/assets/icons/love-icon.svg';
 import loveIconFilled from '@/assets/icons/love-icon-filled.svg';
 import commentIcon from '@/assets/icons/comment-icon.svg';
@@ -51,7 +48,7 @@ function InteractionBar({ postId, showMetrics }) {
             return;
         }
 
-        dispatch(toggleLikeOptimistic(postId));
+        dispatch(toggleLikePost(postId));
     };
 
     // 💡  Handler cho Comment
