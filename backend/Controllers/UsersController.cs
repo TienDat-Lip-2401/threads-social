@@ -49,6 +49,24 @@ namespace Pharse2.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        // FE: GET users/{username}/followers?page=1&per_page=20
+        [HttpGet("{username}/followers")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetFollowers(string username, [FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 20)
+        {
+            var response = await _userService.GetFollowersAsync(username, page, perPage);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        // FE: GET users/{username}/following?page=1&per_page=20
+        [HttpGet("{username}/following")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetFollowing(string username, [FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 20)
+        {
+            var response = await _userService.GetFollowingAsync(username, page, perPage);
+            return StatusCode(response.StatusCode, response);
+        }
+
         // FE: GET users/{username}/replies?page=1&per_page=10
         [HttpGet("{username}/replies")]
         [AllowAnonymous]

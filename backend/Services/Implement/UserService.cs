@@ -219,6 +219,28 @@ namespace Pharse2.Services.Implement
             return ApiResponse.Response(200, result.IsFollowing ? "Đã theo dõi" : "Đã bỏ theo dõi", result);
         }
 
+        // FE: GET users/{username}/followers?page=&per_page=
+        public Task<ApiResponse> GetFollowersAsync(string username, int pageNumber, int pageSize) =>
+            GetFollowListAsync(username, pageNumber, pageSize, _followRepository.GetFollowersAsync);
+
+        // FE: GET users/{username}/following?page=&per_page=
+        public Task<ApiResponse> GetFollowingAsync(string username, int pageNumber, int pageSize) =>
+            GetFollowListAsync(username, pageNumber, pageSize, _followRepository.GetFollowingAsync);
+
+        private async Task<ApiResponse> GetFollowListAsync(string username, int pageNumber, int pageSize,
+            Func<int, int, int, int, Task<PagedResult<FollowUserDto>>> query)
+        {
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null || user.DeleteFlg)
+            {
+                return ApiResponse.Response(404, "Không tìm thấy người dùng.");
+            }
+            (pageNumber, pageSize) = NormalizePage(pageNumber, pageSize);
+            var page = await query(user.Id, pageNumber, pageSize, _commonService.GetUserId());
+            page.Items.ForEach(u => u.AvatarUrl = _mediaStorage.ToPublicUrl(u.AvatarUrl));
+            return ApiResponse.Paged(page, "Lấy danh sách thành công!");
+        }
+
         private static (int, int) NormalizePage(int pageNumber, int pageSize) =>
             (Math.Max(1, pageNumber), pageSize < 1 ? 10 : Math.Min(pageSize, 50));
 
