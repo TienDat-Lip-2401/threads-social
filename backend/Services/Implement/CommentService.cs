@@ -66,15 +66,9 @@ namespace Pharse2.Services.Implement
                 throw;
             }
             var created = await _commentRepository.GetCommentDtoByIdAsync(newComment.Id);
-            return ApiResponse.Response(201, "Comment created successfully", WithPublicUrls(created));
+            return ApiResponse.Response(201, "Comment created successfully", created.WithPublicUrls(_mediaStorage));
         }
 
-        // media_urls trong DB là đường dẫn tương đối → đổi thành URL đầy đủ cho FE
-        private PostCommentDto? WithPublicUrls(PostCommentDto? comment)
-        {
-            if (comment != null) comment.MediaUrls = _mediaStorage.ToPublicUrls(comment.MediaUrls);
-            return comment;
-        }
 
         // FE: GET posts/{id}/comments?page=&per_page= → { data: [...], pagination: {...} }
         public async Task<ApiResponse> GetPostCommentsAsync(int postId, int pageNumber, int pageSize)
@@ -87,7 +81,7 @@ namespace Pharse2.Services.Implement
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50);
             var page = await _commentRepository.GetPostCommentsAsync(postId, pageNumber, pageSize);
-            page.Items.ForEach(c => WithPublicUrls(c));
+            page.Items.ForEach(c => c.WithPublicUrls(_mediaStorage));
             return ApiResponse.Paged(page, "Comments retrieved successfully");
         }
         public async Task<ApiResponse> CreateCommentAsync(CommentRequestDto dto)
@@ -127,7 +121,7 @@ namespace Pharse2.Services.Implement
                 return ApiResponse.Response(500, "Failed to create comment");
             }
             var resultDto = await _commentRepository.GetCommentDtoByIdAsync(newComment.Id);
-            return ApiResponse.Response(201, "Comment created successfully", WithPublicUrls(resultDto));
+            return ApiResponse.Response(201, "Comment created successfully", resultDto.WithPublicUrls(_mediaStorage));
         }
 
         

@@ -17,6 +17,11 @@ public partial class User : EntityBaseModel
     // null = chưa xác thực email → không cho đăng nhập
     public DateTime? EmailVerifiedAt { get; set; }
 
+    // Hồ sơ: tên hiển thị, giới thiệu, ảnh đại diện (đường dẫn tương đối trong wwwroot)
+    public string? Name { get; set; }
+    public string? Bio { get; set; }
+    public string? AvatarPath { get; set; }
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<LikeComment> LikeComments { get; set; } = new List<LikeComment>();

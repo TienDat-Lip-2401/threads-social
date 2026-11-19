@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Pharse2.Filters;
 using Pharse2.Models.DtoModels.Auth;
+using Pharse2.Models.DtoModels.User;
 using Pharse2.Services.Interfaces;
 
 namespace Pharse2.Controllers
@@ -84,6 +85,15 @@ namespace Pharse2.Controllers
         public async Task<IActionResult> GetUserInfo()
         {
             var response = await _userService.GetMeAsync(_commonService.GetUserId());
+            return StatusCode(response.StatusCode, response);
+        }
+
+        // FE: PUT auth/user (multipart: name, bio, avatar) → sửa hồ sơ
+        [HttpPut("user")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        public async Task<IActionResult> UpdateUserInfo([FromForm] UpdateProfileRequestDto dto)
+        {
+            var response = await _userService.UpdateMeAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
 

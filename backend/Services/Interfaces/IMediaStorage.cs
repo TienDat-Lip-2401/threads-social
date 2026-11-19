@@ -14,5 +14,8 @@
 
         // /uploads/a.jpg → http://host/uploads/a.jpg
         List<string> ToPublicUrls(IEnumerable<string> paths);
+
+        // Như trên cho 1 đường dẫn; null giữ null
+        string? ToPublicUrl(string? path);
     }
 }

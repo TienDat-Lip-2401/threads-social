@@ -97,6 +97,9 @@ namespace Pharse2.Services.Implement
             }
         }
 
+        public string? ToPublicUrl(string? path) =>
+            string.IsNullOrEmpty(path) ? null : ToPublicUrls(new[] { path })[0];
+
         public List<string> ToPublicUrls(IEnumerable<string> paths)
         {
             // FE chạy khác origin (vd. localhost:5173) nên cần URL đầy đủ.

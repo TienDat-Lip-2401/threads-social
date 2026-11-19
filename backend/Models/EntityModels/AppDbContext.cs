@@ -125,6 +125,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.Username).HasMaxLength(50);
+            entity.Property(e => e.Name).HasMaxLength(50);
+            entity.Property(e => e.Bio).HasMaxLength(160);
+            entity.Property(e => e.AvatarPath).HasMaxLength(255);
         });
 
         modelBuilder.Entity<Media>(entity =>

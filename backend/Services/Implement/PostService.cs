@@ -59,15 +59,9 @@ namespace Pharse2.Services.Implement
             }
             // FE thêm bài mới lên đầu feed nên cần nguyên object bài viết (user, counts...)
             var created = await _postRepository.GetPostDtoByIdAsync(newPost.Id, _commonService.GetUserId());
-            return ApiResponse.Response(201, "Post created successfully", WithPublicUrls(created));
+            return ApiResponse.Response(201, "Post created successfully", created.WithPublicUrls(_mediaStorage));
         }
 
-        // media_urls trong DB là đường dẫn tương đối → đổi thành URL đầy đủ cho FE
-        private PostResponseDto? WithPublicUrls(PostResponseDto? post)
-        {
-            if (post != null) post.MediaUrls = _mediaStorage.ToPublicUrls(post.MediaUrls);
-            return post;
-        }
 
         public async Task<ApiResponse> DeletePostAsync(int id)
         {
@@ -95,7 +89,7 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(404, "Post not found");
             }
-            return ApiResponse.Response(200, "Post retrieved successfully", WithPublicUrls(post));
+            return ApiResponse.Response(200, "Post retrieved successfully", post.WithPublicUrls(_mediaStorage));
         }
 
         public async Task<ApiResponse> UpdatePostAsync(int id, PostRequestDto dto)
@@ -151,7 +145,7 @@ namespace Pharse2.Services.Implement
         public async Task<ApiResponse> GetPostsByUserIdAsync(int userId)
         {
             var posts = await _postRepository.GetPostsByUserIdAsync(userId, _commonService.GetUserId());
-            posts.ForEach(p => WithPublicUrls(p));
+            posts.ForEach(p => p.WithPublicUrls(_mediaStorage));
             if(posts.Count == 0)
             {
                 return ApiResponse.Response(404, "This user has no posts yet or does not exist.");
@@ -165,7 +159,7 @@ namespace Pharse2.Services.Implement
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50); // chặn per_page quá lớn
             var page = await _postRepository.GetFeedAsync(pageNumber, pageSize, _commonService.GetUserId());
-            page.Items.ForEach(p => WithPublicUrls(p));
+            page.Items.ForEach(p => p.WithPublicUrls(_mediaStorage));
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");
         }
     }

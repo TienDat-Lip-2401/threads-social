@@ -35,7 +35,7 @@ namespace Pharse2.Models.DtoModels
             Content = p.Content,
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,
-            User = new PostUserDto { Id = p.User.Id, Username = p.User.Username },
+            User = new PostUserDto { Id = p.User.Id, Username = p.User.Username, Name = p.User.Name, AvatarUrl = p.User.AvatarPath },
             MediaUrls = p.Media.Where(m => m.CommentId == null && !m.DeleteFlg)
                 .OrderBy(m => m.SortOrder).Select(m => m.Path).ToList(),
             LikesCount = p.LikePosts.Count(),
@@ -48,8 +48,10 @@ namespace Pharse2.Models.DtoModels
     {
         public int Id { get; set; }
         public string Username { get; set; } = null!;
-        // shortcut: bảng User chưa có avatar/verified; FE tự dùng avatar mặc định khi null
+        public string? Name { get; set; }
+        // Projection lấy đường dẫn tương đối; service đổi thành URL đầy đủ (null → FE dùng avatar mặc định)
         public string? AvatarUrl { get; set; }
+        // shortcut: chưa có tích xanh, luôn false
         public bool Verified { get; set; }
     }
 }

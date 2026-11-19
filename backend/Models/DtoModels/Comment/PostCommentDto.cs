@@ -30,7 +30,7 @@ namespace Pharse2.Models.DtoModels.Comment
             Content = c.Content,
             CreatedAt = c.CreatedAt,
             UpdatedAt = c.UpdatedAt,
-            User = new PostUserDto { Id = c.User.Id, Username = c.User.Username },
+            User = new PostUserDto { Id = c.User.Id, Username = c.User.Username, Name = c.User.Name, AvatarUrl = c.User.AvatarPath },
             MediaUrls = c.Media.Where(m => !m.DeleteFlg).OrderBy(m => m.SortOrder).Select(m => m.Path).ToList(),
             LikesCount = c.LikeComments.Count(),
             RepliesCount = c.InverseParentComment.Count(r => !r.DeleteFlg),

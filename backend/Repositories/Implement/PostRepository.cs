@@ -78,6 +78,21 @@ namespace Pharse2.Repositories.Implement
                 .ToPageResultAsync(pageNumber, pageSize);
         }
 
+        // Trang hồ sơ: bài của 1 user, mới nhất lên đầu
+        public async Task<PagedResult<PostResponseDto>> GetUserPostsAsync(int userId, int pageNumber, int pageSize, int viewerId)
+        {
+            return await _context.Posts
+                .Where(p => p.UserId == userId && !p.DeleteFlg)
+                .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
+                .Select(PostResponseDto.Projection(viewerId))
+                .ToPageResultAsync(pageNumber, pageSize);
+        }
+
+        public async Task<int> CountByUserAsync(int userId)
+        {
+            return await _context.Posts.CountAsync(p => p.UserId == userId && !p.DeleteFlg);
+        }
+
         public async Task<PostResponseDto?> GetPostDtoByIdAsync(int id, int viewerId)
         {
             return await _context.Posts
