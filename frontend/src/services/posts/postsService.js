@@ -163,7 +163,7 @@ export const createReply = createAsyncThunk(
 
             // Call API với FormData
             const response = await http.post(
-                `posts/${parentPostId}/reply`,
+                `posts/${parentPostId}/comments`,
                 formData,
                 {
                     headers: { 'Content-Type': 'multipart/form-data' },
@@ -187,7 +187,7 @@ export const getReplies = createAsyncThunk(
     'posts/getReplies',
     async ({ postId, page = 1, perPage = 10 }, { rejectWithValue }) => {
         try {
-            const response = await http.get(`posts/${postId}/replies`, {
+            const response = await http.get(`posts/${postId}/comments`, {
                 params: {
                     page,
                     per_page: perPage,
