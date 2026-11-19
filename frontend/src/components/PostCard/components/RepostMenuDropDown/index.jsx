@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import RepostMenuContent from './RepostMenuContent';
 
-function RepostMenuDropDown({ trigger, onRepost, onQuote }) {
+function RepostMenuDropDown({ trigger, isReposted, onRepost, onQuote }) {
     // State để track dropdown open/close
     const [isOpen, setIsOpen] = useState(false);
 
@@ -30,7 +30,11 @@ function RepostMenuDropDown({ trigger, onRepost, onQuote }) {
             >
                 {/* Main menu */}
                 {isOpen && (
-                    <RepostMenuContent onRepost={onRepost} onQuote={onQuote} />
+                    <RepostMenuContent
+                        isReposted={isReposted}
+                        onRepost={onRepost}
+                        onQuote={onQuote}
+                    />
                 )}
             </DropdownMenuContent>
         </DropdownMenu>

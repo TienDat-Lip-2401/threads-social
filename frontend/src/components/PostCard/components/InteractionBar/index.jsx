@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import copy from 'copy-to-clipboard';
 
-import { toggleRepostOptimistic, useInteraction } from '@/features/posts';
-import { toggleLikePost } from '@/services/posts';
+import { useInteraction } from '@/features/posts';
+import { toggleLikePost, toggleRepostPost } from '@/services/posts';
 import loveIcon from '@/assets/icons/love-icon.svg';
 import loveIconFilled from '@/assets/icons/love-icon-filled.svg';
 import commentIcon from '@/assets/icons/comment-icon.svg';
@@ -35,8 +35,13 @@ function InteractionBar({ postId, showMetrics }) {
     // Lấy full post data từ Redux store
     const post = useSelector(
         (state) =>
-            state.posts.posts.find((post) => post.id === postId) ||
-            state.posts.profile.posts.find((post) => post.id === postId),
+            [
+                state.posts.posts,
+                state.posts.profile.posts,
+                state.posts.profileReposts.posts,
+            ]
+                .map((list) => list.find((post) => post.id === postId))
+                .find(Boolean),
         shallowEqual,
     );
 
@@ -108,7 +113,7 @@ function InteractionBar({ postId, showMetrics }) {
 
     // 📌 Repost handlers (chỉ chạy nếu đã authenticated)
     const handleRepost = () => {
-        dispatch(toggleRepostOptimistic(postId));
+        dispatch(toggleRepostPost(postId));
     };
 
     const handleQuote = () => {
@@ -165,6 +170,7 @@ function InteractionBar({ postId, showMetrics }) {
                             {showMetrics && (interaction.repostCount || 0)}
                         </PostActionButton>
                     }
+                    isReposted={interaction.isReposted}
                     onRepost={handleRepost}
                     onQuote={handleQuote}
                 />

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import MenuSections from '@/components/MenuSections';
 import { gettingRepostMenuSection } from '@/constants/repostMenu';
 
-function RepostMenuContent({ onRepost, onQuote }) {
+function RepostMenuContent({ isReposted, onRepost, onQuote }) {
     const { t } = useTranslation();
 
     // ← Map action name to handler
@@ -12,7 +12,7 @@ function RepostMenuContent({ onRepost, onQuote }) {
         quote: onQuote,
     };
 
-    const menuSection = gettingRepostMenuSection(t);
+    const menuSection = gettingRepostMenuSection(t, isReposted);
 
     return (
         <MenuSections

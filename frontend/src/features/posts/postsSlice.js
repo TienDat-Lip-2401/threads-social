@@ -5,8 +5,10 @@ import {
     getPosts,
     getReplies,
     getUserPosts,
+    getUserReposts,
     loadMorePosts,
     toggleLikePost,
+    toggleRepostPost,
 } from '@/services/posts';
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -18,6 +20,14 @@ const initialState = {
     },
     // Bài của trang hồ sơ đang xem (tách riêng khỏi feed)
     profile: {
+        username: null,
+        posts: [],
+        currentPage: 0,
+        hasMore: true,
+        isLoading: false,
+    },
+    // Tab Reposts của hồ sơ đang xem (cùng cấu trúc với profile)
+    profileReposts: {
         username: null,
         posts: [],
         currentPage: 0,
@@ -108,9 +118,9 @@ const applyToggleLike = (state, postId) => {
     }
 };
 
-// Tìm bài theo id ở feed hoặc trang hồ sơ
+// Tìm bài theo id ở feed hoặc trang hồ sơ (tab Threads + Reposts)
 const findPosts = (state, postId) =>
-    [state.posts, state.profile.posts]
+    [state.posts, state.profile.posts, state.profileReposts.posts]
         .map((list) => list.find((p) => p.id === postId))
         .filter(Boolean);
 
@@ -129,24 +139,103 @@ const setLikedList = (state, post, isLiked) => {
     }
 };
 
-// Đồng bộ interaction từ dữ liệu server: like lấy theo server (is_liked, likes_count)
-// để không bị cache localStorage cũ / tài khoản khác ghi đè.
-// Repost vẫn lưu ở máy (chưa có API).
+// Thêm/bỏ post khỏi danh sách đã repost (repostedPostIds + repostedPosts)
+const setRepostedList = (state, post, isReposted) => {
+    const repostIndex = state.repostedPostIds.indexOf(post.id);
+    if (isReposted && repostIndex === -1) state.repostedPostIds.push(post.id);
+    if (!isReposted && repostIndex !== -1)
+        state.repostedPostIds.splice(repostIndex, 1);
+
+    const postIndex = state.repostedPosts.findIndex((p) => p.id === post.id);
+    if (isReposted) {
+        if (postIndex !== -1) state.repostedPosts[postIndex] = post;
+        else state.repostedPosts.push(post);
+    } else if (postIndex !== -1) {
+        state.repostedPosts.splice(postIndex, 1);
+    }
+};
+
+// ========================================
+// 💡 Repost: đảo trạng thái ngay trên UI (dùng cho optimistic update và rollback)
+// ========================================
+const applyToggleRepost = (state, postId) => {
+    const post = findPosts(state, postId)[0];
+    if (!state.interactions[postId]) {
+        state.interactions[postId] = {
+            isLiked: Boolean(post?.is_liked),
+            likeCount: post?.likes_count || 0,
+            isReposted: Boolean(post?.is_reposted),
+            repostCount: post?.reposts_and_quotes_count || 0,
+        };
+    }
+
+    const interaction = state.interactions[postId];
+    interaction.isReposted = !interaction.isReposted;
+    // Đảm bảo repostCount không bị âm
+    interaction.repostCount = Math.max(
+        0,
+        interaction.repostCount + (interaction.isReposted ? 1 : -1),
+    );
+
+    if (post) setRepostedList(state, post, interaction.isReposted);
+};
+
+// Đồng bộ interaction từ dữ liệu server (is_liked, likes_count, is_reposted,
+// reposts_and_quotes_count) để không bị cache localStorage cũ / tài khoản khác ghi đè.
 const syncInteraction = (state, post) => {
-    const postId = post.id;
-    const prev = state.interactions[postId];
     const isLiked = Boolean(post.is_liked);
-    state.interactions[postId] = {
+    const isReposted = Boolean(post.is_reposted);
+    state.interactions[post.id] = {
         isLiked,
         likeCount: post.likes_count || 0,
-        isReposted: prev
-            ? prev.isReposted
-            : state.repostedPostIds.includes(postId),
-        repostCount: prev
-            ? prev.repostCount
-            : post.reposts_and_quotes_count || 0,
+        isReposted,
+        repostCount: post.reposts_and_quotes_count || 0,
     };
     setLikedList(state, post, isLiked);
+    setRepostedList(state, post, isReposted);
+};
+
+// Danh sách bài trang hồ sơ (tab Threads: profile, tab Reposts: profileReposts)
+const addProfileListCases = (builder, thunk, key) => {
+    builder
+        .addCase(thunk.pending, (state, action) => {
+            const list = state[key];
+            const { username, page = 1 } = action.meta.arg;
+            if (page === 1) {
+                // Đổi sang hồ sơ khác → xóa bài của hồ sơ cũ
+                if (list.username !== username) {
+                    list.posts = [];
+                    list.currentPage = 0;
+                }
+                list.username = username;
+                list.hasMore = true;
+            }
+            list.isLoading = true;
+        })
+        .addCase(thunk.fulfilled, (state, action) => {
+            const list = state[key];
+            // Bỏ response trễ của hồ sơ trước đó
+            if (action.meta.arg.username !== list.username) return;
+
+            const { data, pagination } = action.payload;
+            if (pagination.current_page === 1) {
+                list.posts = data;
+            } else {
+                const ids = new Set(list.posts.map((p) => p.id));
+                list.posts.push(...data.filter((p) => !ids.has(p.id)));
+            }
+            list.currentPage = pagination.current_page;
+            list.hasMore = pagination.current_page < pagination.last_page;
+            list.isLoading = false;
+
+            data.forEach((post) => syncInteraction(state, post));
+        })
+        .addCase(thunk.rejected, (state, action) => {
+            const list = state[key];
+            if (action.meta.arg.username !== list.username) return;
+            list.isLoading = false;
+            list.hasMore = false;
+        });
 };
 
 export const postsSlice = createSlice({
@@ -205,98 +294,12 @@ export const postsSlice = createSlice({
         },
 
         toggleRepostOptimistic: (state, action) => {
-            const postId = action.payload;
-
-            // 1: Update interactions cache
-            if (!state.interactions[postId]) {
-                const post = state.posts.find((p) => p.id === postId);
-                state.interactions[postId] = {
-                    isLiked: Boolean(post?.is_liked),
-                    likeCount: post?.likes_count || 0,
-                    isReposted: false,
-                    repostCount: post?.reposts_and_quotes_count || 0,
-                };
-            }
-
-            const interaction = state.interactions[postId];
-            interaction.isReposted = !interaction.isReposted;
-
-            // 🔧 FIX: Đảm bảo repostCount không bị âm
-            if (interaction.isReposted) {
-                interaction.repostCount += 1;
-            } else {
-                interaction.repostCount = Math.max(
-                    0,
-                    interaction.repostCount - 1,
-                );
-            }
-
-            // 2: Update repostedPostIds array
-            const repostIndex = state.repostedPostIds.indexOf(postId);
-
-            if (interaction.isReposted && repostIndex === -1) {
-                state.repostedPostIds.push(postId);
-
-                // LƯU FULL POST DATA cho REPOST
-                const post = state.posts.find((p) => p.id === postId);
-                if (post && !state.repostedPosts.find((p) => p.id === postId)) {
-                    state.repostedPosts.push(post);
-                }
-            }
-
-            if (!interaction.isReposted && repostIndex !== -1) {
-                state.repostedPostIds.splice(repostIndex, 1);
-
-                // XÓA POST DATA khỏi REPOST
-                const postIndex = state.repostedPosts.findIndex(
-                    (p) => p.id === postId,
-                );
-                if (postIndex !== -1) {
-                    state.repostedPosts.splice(postIndex, 1);
-                }
-            }
+            applyToggleRepost(state, action.payload);
         },
 
+        // 💡 Rollback khi API fail
         revertRepostOptimistic: (state, action) => {
-            const postId = action.payload;
-            const interaction = state.interactions[postId];
-
-            if (interaction) {
-                // Đảo ngược lại interaction
-                interaction.isReposted = !interaction.isReposted;
-                interaction.repostCount = Math.max(
-                    0,
-                    interaction.repostCount + (interaction.isReposted ? 1 : -1),
-                );
-
-                // Đảo ngược lại repostedPostIds array và repostedPosts
-                const repostIndex = state.repostedPostIds.indexOf(postId);
-
-                if (interaction.isReposted && repostIndex === -1) {
-                    state.repostedPostIds.push(postId);
-
-                    // Rollback: Thêm lại vào repostedPosts
-                    const post = state.posts.find((p) => p.id === postId);
-                    if (
-                        post &&
-                        !state.repostedPosts.find((p) => p.id === postId)
-                    ) {
-                        state.repostedPosts.push(post);
-                    }
-                }
-
-                if (!interaction.isReposted && repostIndex !== -1) {
-                    state.repostedPostIds.splice(repostIndex, 1);
-
-                    // Rollback: Xóa khỏi repostedPosts
-                    const postIndex = state.repostedPosts.findIndex(
-                        (p) => p.id === postId,
-                    );
-                    if (postIndex !== -1) {
-                        state.repostedPosts.splice(postIndex, 1);
-                    }
-                }
-            }
+            applyToggleRepost(state, action.payload);
         },
     },
 
@@ -427,46 +430,34 @@ export const postsSlice = createSlice({
             });
 
         // ============================================
-        //  GET USER POSTS (trang hồ sơ)
+        //  TRANG HỒ SƠ: tab Threads + tab Reposts
+        // ============================================
+        addProfileListCases(builder, getUserPosts, 'profile');
+        addProfileListCases(builder, getUserReposts, 'profileReposts');
+
+        // ============================================
+        //  TOGGLE REPOST (optimistic → đồng bộ server / rollback)
         // ============================================
         builder
-            .addCase(getUserPosts.pending, (state, action) => {
-                const { username, page = 1 } = action.meta.arg;
-                if (page === 1) {
-                    // Đổi sang hồ sơ khác → xóa bài của hồ sơ cũ
-                    if (state.profile.username !== username) {
-                        state.profile.posts = [];
-                        state.profile.currentPage = 0;
-                    }
-                    state.profile.username = username;
-                    state.profile.hasMore = true;
-                }
-                state.profile.isLoading = true;
+            .addCase(toggleRepostPost.pending, (state, action) => {
+                applyToggleRepost(state, action.meta.arg);
             })
-            .addCase(getUserPosts.fulfilled, (state, action) => {
-                // Bỏ response trễ của hồ sơ trước đó
-                if (action.meta.arg.username !== state.profile.username) return;
-
-                const { data, pagination } = action.payload;
-                if (pagination.current_page === 1) {
-                    state.profile.posts = data;
-                } else {
-                    const ids = new Set(state.profile.posts.map((p) => p.id));
-                    state.profile.posts.push(
-                        ...data.filter((p) => !ids.has(p.id)),
-                    );
+            .addCase(toggleRepostPost.fulfilled, (state, action) => {
+                const { postId, is_reposted, reposts_and_quotes_count } =
+                    action.payload;
+                const interaction = state.interactions[postId];
+                if (interaction) {
+                    interaction.isReposted = is_reposted;
+                    interaction.repostCount = reposts_and_quotes_count;
                 }
-                state.profile.currentPage = pagination.current_page;
-                state.profile.hasMore =
-                    pagination.current_page < pagination.last_page;
-                state.profile.isLoading = false;
-
-                data.forEach((post) => syncInteraction(state, post));
+                const post =
+                    findPosts(state, postId)[0] ||
+                    state.repostedPosts.find((p) => p.id === postId);
+                if (post) setRepostedList(state, post, is_reposted);
             })
-            .addCase(getUserPosts.rejected, (state, action) => {
-                if (action.meta.arg.username !== state.profile.username) return;
-                state.profile.isLoading = false;
-                state.profile.hasMore = false;
+            .addCase(toggleRepostPost.rejected, (state, action) => {
+                applyToggleRepost(state, action.meta.arg);
+                state.error = action.payload;
             });
 
         // ============================================

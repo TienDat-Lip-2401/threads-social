@@ -209,24 +209,33 @@ export const getReplies = createAsyncThunk(
 );
 
 // ========================================
-// 💡 GET POSTS CỦA 1 USER (trang hồ sơ, có phân trang)
+// 💡 DANH SÁCH BÀI TRÊN TRANG HỒ SƠ (có phân trang)
+// getUserPosts: tab Threads (GET users/{username}/posts)
+// getUserReposts: tab Reposts (GET users/{username}/reposts)
 // ========================================
-export const getUserPosts = createAsyncThunk(
-    'posts/getUserPosts',
-    async ({ username, page = 1, perPage = 10 }, { rejectWithValue }) => {
-        try {
-            const response = await http.get(
-                `users/${encodeURIComponent(username)}/posts`,
-                { params: { page, per_page: perPage } },
-            );
-            return response; // { data, pagination }
-        } catch (error) {
-            return rejectWithValue({
-                message: error.response?.data?.message || error.message,
-                status: error.response?.status,
-            });
-        }
-    },
+const createUserListThunk = (type, path) =>
+    createAsyncThunk(
+        type,
+        async ({ username, page = 1, perPage = 10 }, { rejectWithValue }) => {
+            try {
+                const response = await http.get(
+                    `users/${encodeURIComponent(username)}/${path}`,
+                    { params: { page, per_page: perPage } },
+                );
+                return response; // { data, pagination }
+            } catch (error) {
+                return rejectWithValue({
+                    message: error.response?.data?.message || error.message,
+                    status: error.response?.status,
+                });
+            }
+        },
+    );
+
+export const getUserPosts = createUserListThunk('posts/getUserPosts', 'posts');
+export const getUserReposts = createUserListThunk(
+    'posts/getUserReposts',
+    'reposts',
 );
 
 // ========================================
@@ -248,21 +257,21 @@ export const toggleLikePost = createAsyncThunk(
     },
 );
 
-// export const toggleRepostPost = createAsyncThunk(
-//     'posts/toggleRepost',
-//     async (postId, { dispatch, rejectWithValue }) => {
-//         dispatch(postsSlice.actions.toggleRepostOptimistic(postId));
-
-//         try {
-//             const response = await http.post(`posts/${postId}/repost`);
-//             return response.data;
-
-//         } catch (error) {
-//             dispatch(postsSlice.actions.revertRepostOptimistic(postId));
-//             return rejectWithValue({
-//                 message: error.response?.data?.message || error.message,
-//                 status: error.response?.status,
-//             });
-//         }
-//     }
-// );
+// ========================================
+// 💡 TOGGLE REPOST: POST posts/{id}/repost → { is_reposted, reposts_and_quotes_count }
+// Giống like: UI đổi ngay ở pending, đồng bộ server ở fulfilled, rollback ở rejected (postsSlice)
+// ========================================
+export const toggleRepostPost = createAsyncThunk(
+    'posts/toggleRepost',
+    async (postId, { rejectWithValue }) => {
+        try {
+            const response = await http.post(`posts/${postId}/repost`);
+            return { postId, ...response.data };
+        } catch (error) {
+            return rejectWithValue({
+                message: error.response?.data?.message || error.message,
+                status: error.response?.status,
+            });
+        }
+    },
+);

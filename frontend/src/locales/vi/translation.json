@@ -197,6 +197,7 @@
 
         "repostMenu": {
             "repost": "Đăng lại",
+            "removeRepost": "Gỡ đăng lại",
             "quote": "Trích dẫn kèm bình luận"
         }
     },

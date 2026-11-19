@@ -1,34 +1,22 @@
-import { useFetchPosts, useRepostedPosts } from '@/features/posts';
-import PostCard from '@/components/PostCard';
-import EmptyMessage from '../EmptyMessage';
+import { useOutletContext } from 'react-router-dom';
 
+import { useProfileReposts } from '@/features/posts';
+import { getUserReposts } from '@/services/posts';
+import ProfilePostList from '../ProfilePostList';
+
+// Tab Reposts: bài hồ sơ đang xem đã repost (repost mới nhất lên đầu)
 function Reposts() {
-    // Fetch posts để đảm bảo luôn có data
-    useFetchPosts();
-
-    const repostedPosts = useRepostedPosts();
-    console.log('🚀 ~ Reposts ~ repostedPosts:', repostedPosts);
-
-    if (repostedPosts.length === 0) {
-        return <EmptyMessage message='profilePage.tabs.repostsNote' />;
-    }
+    const { profile } = useOutletContext();
+    const list = useProfileReposts();
 
     return (
-        <div>
-            {repostedPosts.map((post) => (
-                <PostCard
-                    key={post.id}
-                    avatar={post.user?.avatar_url}
-                    username={post.user?.username}
-                    timeAgo={post.user?.created_at}
-                    verified={post.user?.verified}
-                    content={post.content}
-                    images={post}
-                    {...post}
-                    showMetrics={true}
-                />
-            ))}
-        </div>
+        <ProfilePostList
+            username={profile.username}
+            list={list}
+            fetchPage={getUserReposts}
+            emptyMessage='profilePage.tabs.repostsNote'
+            hideUnreposted={profile.is_me}
+        />
     );
 }
 export default Reposts;

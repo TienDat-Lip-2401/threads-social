@@ -11,6 +11,7 @@ import {
     selectLikedPosts,
     selectMyPosts,
     selectProfilePosts,
+    selectProfileReposts,
     selectRepostedPostIds,
     selectRepostedPosts,
 } from './postsSelector';
@@ -107,7 +108,7 @@ export const useInteraction = (postId) => {
             return {
                 isLiked: Boolean(post.is_liked),
                 likeCount: post.likes_count,
-                isReposted: false,
+                isReposted: Boolean(post.is_reposted),
                 repostCount: post.reposts_and_quotes_count,
             };
         }
@@ -144,3 +145,5 @@ export const useInitialLoading = () => useSelector(selectIsInitialLoading);
 export const useMyPosts = () => useSelector(selectMyPosts);
 // { username, posts, currentPage, hasMore, isLoading } của trang hồ sơ
 export const useProfilePosts = () => useSelector(selectProfilePosts);
+// Cùng cấu trúc, cho tab Reposts của trang hồ sơ
+export const useProfileReposts = () => useSelector(selectProfileReposts);

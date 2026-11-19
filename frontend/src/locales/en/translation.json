@@ -197,6 +197,7 @@
 
         "repostMenu": {
             "repost": "Repost",
+            "removeRepost": "Remove",
             "quote": "Quote"
         }
     },
