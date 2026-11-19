@@ -1,0 +1,335 @@
+/* custom.css - CSS tùy chỉnh cho project của bạn */
+
+/* Theme configuration - Các biến màu và font riêng của project */
+@theme {
+    /* Screens */
+    --breakpoint-sm: 30rem; /*480px*/
+    --breakpoint-md: 48rem; /*768px*/
+    --breakpoint-lg: 80rem; /*1280px*/
+    --breakpoint-xl: 87.5rem; /*1400px*/
+    --breakpoint-2xl: 96rem; /*1536px*/
+
+    /* Grays for text and UI elements */
+    --color-gray-100: #ffffff; /* Form backgrounds */
+    --color-gray-200: #fcfafa;
+    --color-gray-300: #efefef; /* light: hover background */
+    --color-gray-350: #f3f1f1e0;
+    --color-gray-400: #b8b8b8;
+    --color-gray-500: #999999;
+    --color-gray-700: #333;
+    --color-gray-800: #282727; /* dark: hover background */
+
+    /* Other colors */
+    --color-error: #ff0034;
+    --color-blue: #485ef5;
+    --color-blue-disabled: #558bff;
+
+    /* Fonts */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-secondary: 'Helvetica', 'Arial', sans-serif;
+}
+
+/* Bước 1: Thiết lập base - Base overrides Preflight */
+@layer base {
+    *,
+    ::before,
+    ::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        @apply scroll-smooth;
+    }
+
+    body {
+        font-family: var(--font-sans);
+        color: var(--color-black);
+        @apply bg-gray-100 transition-colors dark:bg-black;
+    }
+
+    button {
+        outline: none;
+        cursor: pointer;
+    }
+
+    a {
+        color: inherit;
+    }
+}
+
+/* Bước 2: Tạo components tái sử dụng - Reusable components */
+@layer components {
+    /*! Custom h1 */
+    .main-heading {
+        @apply font-semibold text-black dark:text-white;
+    }
+
+    .icon-gray {
+        filter: brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%)
+            hue-rotate(0deg) brightness(98%) contrast(90%);
+    }
+
+    /*! ------ DEFAULT LAYOUT ------ */
+    /*! DefaultLayout */
+    .layout-wrapper {
+        @apply flex h-screen justify-center gap-3 overflow-hidden;
+        @apply md:px-5;
+    }
+
+    .main-container {
+        @apply flex flex-col md:pb-0;
+    }
+
+    .outlet-container {
+        @apply mx-auto h-full w-full pt-28;
+        @apply sm:pt-2 md:w-[640px] md:px-5 lg:w-[680px];
+        /* @apply ; */
+    }
+
+    /*! Home */
+    /* ❌ Xóa overflow-hidden h-full  */
+    .home-wrapper {
+        @apply sticky top-4 flex w-full flex-col;
+        @apply border-b-0 bg-white;
+        @apply md:rounded-t-2xl md:border dark:bg-[#242424];
+        @apply h-[calc(100vh-4rem)];
+    }
+
+    .posts-container {
+        @apply h-full w-full flex-1 overflow-y-auto;
+        @apply divide-y divide-gray-300 dark:divide-gray-500/20;
+        @apply sm:pt-25 md:pt-0;
+    }
+
+    /*! NavSidebar */
+    .nav-wrapper {
+        /* Mobile: Fixed bottom - NGANG */
+        @apply fixed right-0 bottom-0 left-0 z-50 w-full;
+        @apply flex flex-row justify-around; /* flex-row cho mobile */
+        @apply bg-gray-100 dark:border-gray-800 dark:bg-black;
+        @apply px-2;
+
+        /* Desktop: Fixed left sidebar - DỌC */
+        @apply md:top-5 md:right-auto md:bottom-5 md:left-0;
+        @apply md:w-auto md:min-w-[76px] md:flex-col md:items-center;
+        @apply md:border-t-0 md:bg-transparent md:py-0;
+    }
+
+    .nav-section {
+        @apply hidden shrink-0;
+        @apply md:block; /* or md:block */
+    }
+
+    .nav-container {
+        @apply flex w-full md:flex-1 md:items-center;
+    }
+
+    .nav-list {
+        @apply flex w-full flex-row items-center justify-around py-1;
+        @apply md:flex-col md:gap-2;
+    }
+
+    .nav-item {
+        @apply flex items-center md:[display:revert];
+    }
+
+    .nav-btn {
+        /* Mobile (< 640px) - mặc định */
+        @apply px-4;
+
+        /* Tablet */
+        @apply sm:px-10;
+
+        /* Desktop */
+        @apply inline-block rounded-[10px] py-2 md:px-3;
+        @apply text-gray-400 hover:bg-gray-400/20 hover:text-gray-400 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-500;
+    }
+
+    .nav-btn__active {
+        @apply text-gray-700 dark:text-white;
+    }
+
+    .home-btn {
+        @apply dark:text-white;
+    }
+
+    .plus-btn {
+        @apply bg-gray-400/20 hover:text-black dark:bg-gray-800 dark:hover:text-white;
+    }
+
+    .nav-btn__bottom {
+        @apply inline-block rounded-[10px] px-3 py-2 text-gray-400 hover:bg-gray-400/20 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-500;
+    }
+
+    .setting-btn {
+        @apply hover:bg-transparent hover:text-black dark:hover:bg-transparent dark:hover:text-white;
+    }
+
+    /*! Appearance Submenu */
+    .appearance-container {
+        @apply relative flex flex-col items-center justify-center gap-4;
+        @apply max-w-65 border-gray-500 bg-white px-4 py-2 dark:bg-gray-800;
+    }
+
+    /*! Base button styles */
+    .appearance-btns {
+        @apply flex items-center rounded-md bg-gray-200 dark:bg-black;
+    }
+
+    .appearance-btn {
+        @apply flex flex-1 items-center justify-center gap-2;
+        @apply px-7 py-2 transition-all;
+    }
+
+    /*! Active states - khi được chọn */
+    .appearance-btn--active {
+        @apply rounded-md border text-black dark:bg-white/20 dark:text-white;
+    }
+
+    /*! Inactive states - khi không được chọn */
+    .appearance-btn--inactive {
+        @apply border border-transparent text-gray-400 dark:text-gray-500;
+    }
+
+    /*! LoginPanel */
+    .login-panel {
+        @apply bg-gray-350 max-h-[289px] max-w-[338px] rounded-2xl border p-6 dark:bg-[#242424];
+        @apply sticky top-16 hidden shrink-0 flex-col items-center gap-3 self-start min-[1060px]:flex;
+    }
+
+    .login-heading {
+        @apply text-lg font-semibold;
+    }
+
+    .login-desc {
+        @apply text-center text-sm font-light text-gray-500;
+    }
+
+    .insta-btn {
+        @apply my-3 flex gap-3 rounded-2xl bg-white px-11 py-6 dark:bg-black dark:text-white;
+    }
+
+    .login-link {
+        @apply text-sm font-light text-gray-500;
+    }
+
+    /*! ------ AUTHLAYOUT ------  */
+    /*! AuthLayout  */
+    .auth-wrapper {
+        @apply relative min-h-screen overflow-hidden;
+    }
+
+    .auth-content {
+        @apply flex min-h-screen items-center justify-center md:pt-30;
+    }
+
+    /*! AuthBanner */
+    .auth-banner {
+        @apply fixed left-1/2 -z-10 hidden -translate-x-1/2;
+        /* @apply md:top-40 md:block lg:top-20 xl:top-29 2xl:top-20; */
+        @apply md:top-20 md:block lg:top-20 xl:top-25 2xl:top-20;
+    }
+
+    .auth-img {
+        /* @apply h-auto w-auto sm:scale-[5.0] md:scale-[4.0] lg:scale-[3.0] xl:scale-[2.2] 2xl:scale-[1.8]; */
+        @apply h-auto w-auto md:scale-[3.0] lg:scale-[3.0] 2xl:scale-[1.8];
+    }
+
+    /*! AuthFooter */
+    .footer {
+        @apply absolute right-0 bottom-0 left-0 mx-auto px-5 py-5;
+    }
+    .footer__list {
+        @apply flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5;
+        @apply mx-auto w-full max-w-[534px];
+        @apply text-center text-xs text-gray-500;
+    }
+
+    .footer__list a {
+        @apply hover:underline;
+    }
+
+    /*! ForgotPassword & ResetPassword */
+    .password-container {
+        @apply flex w-[388px] flex-col items-center justify-center;
+        @apply rounded-[2px] border-2 px-11 py-8;
+        @apply dark:border-gray-400/30;
+    }
+
+    .password-card__header {
+        @apply mb-4 flex flex-col items-center justify-center space-y-4;
+    }
+
+    .password-card__title {
+        @apply text-lg font-semibold text-black sm:text-base dark:text-white;
+    }
+
+    .password-card__description {
+        @apply text-center text-base text-gray-500 sm:text-[14px];
+    }
+
+    .password-card__form {
+        @apply mb-3 w-full space-y-4;
+    }
+
+    .password-card__input {
+        @apply h-10 rounded-sm! border-gray-400/40!;
+        @apply px-2 py-1 text-lg placeholder:text-[13px] placeholder:opacity-70 dark:text-gray-300;
+    }
+
+    .password-card__link {
+        @apply text-blue text-sm hover:underline sm:text-[12px];
+    }
+}
+
+/* Bước 3: Thêm utilities khi cần - Custom utilities */
+@layer utilities {
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
+
+/* Input */
+.input-base {
+    /* Border & Background */
+    @apply rounded-lg border border-transparent bg-gray-400/20 shadow-none dark:bg-gray-700;
+    @apply transition-colors duration-200;
+    @apply placeholder:text-sm placeholder:text-gray-500;
+    /* Focus states */
+    @apply focus-visible:border-gray-500/30 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none dark:focus-visible:border-gray-500/50;
+    /* Disabled state */
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.input-auth {
+    @apply h-13 w-full px-4 text-lg sm:text-[15px] dark:text-white;
+}
+
+/* Login Btn */
+.auth-btn {
+    @apply h-13 w-full rounded-lg bg-black text-base sm:text-sm;
+    @apply cursor-pointer hover:bg-black disabled:text-gray-500 disabled:opacity-100;
+    @apply dark:bg-white;
+}
+
+/* Dropdown */
+/* use p-1.5 before */
+.dropdown-menu-content {
+    @apply mr-2 ml-4 min-w-50 rounded-xl border p-2 shadow-xs md:min-w-58 dark:border-transparent dark:bg-gray-800;
+}
+
+.dropdown-item {
+    @apply flex items-center justify-between;
+    @apply rounded-lg px-2 py-3;
+    @apply cursor-pointer text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-500/10;
+    /* @apply rounded-lg px-3 py-4; */
+}
+
+.dropdown-item__danger {
+    @apply text-error hover:text-error!;
+}

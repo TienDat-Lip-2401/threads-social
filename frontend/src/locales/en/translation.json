@@ -1,0 +1,263 @@
+{
+    "settings": {
+        "languages": "Languages",
+        "appearance": "Appearance",
+        "insights": "Insights",
+        "settingsMenu": "Settings",
+        "feeds": "Feeds",
+        "saved": "Saved",
+        "liked": "Liked",
+        "reportProblem": "Report a problem",
+        "logout": "Log out"
+    },
+
+    "appearance": {
+        "title": "Appearance",
+        "auto": "Auto"
+    },
+
+    "feeds": {
+        "title": "Feeds",
+        "forYou": "For you",
+        "following": "Following",
+        "ghostPosts": "Ghost posts"
+    },
+
+    "notFound": {
+        "title": "Not all who wander are lost, but this page is",
+        "description": "The link's not working or the page is gone. Go back to keep exploring.",
+        "button": "Back"
+    },
+
+    "loginPanel": {
+        "title": "Log in or sign up for Threads",
+        "description": "See what people are talking about and join the conversation.",
+        "continueWithInstagram": "Continue with Instagram",
+        "loginWithUsername": "Login with username instead"
+    },
+
+    "auth": {
+        "loginTitle": "Log in with your Instagram account",
+        "registerTitle": "Create a free account",
+        "identifier": "Username or email",
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm password",
+        "loginButton": "Log in",
+        "registerButton": "Register",
+        "forgotPassword": "Forgotten password?",
+        "or": "or",
+        "continueWithInstagram": "Continue with Instagram",
+        "noAccount": "Don't have an account?",
+        "haveAccount": "Already have an account?",
+        "registerNow": "Register now",
+        "loginNow": "Login now",
+        "backToHome": "Back to home",
+        "getApp": "Get app",
+        "loading": "Loading...",
+
+        "validation": {
+            "identifierMin": "Username or email must be at least 3 characters",
+            "identifierRequired": "Username or email is required",
+            "identifierInvalid": "Username or email is not in the correct format",
+
+            "usernameMin": "Username must be at least 3 characters",
+            "usernameMax": "Username must not exceed 30 characters",
+            "usernameRequired": "Username is required",
+            "usernameInvalid": "Username can only contain letters, numbers, dots and underscores",
+
+            "emailRequired": "Email is required",
+            "emailInvalid": "Invalid email address",
+
+            "passwordMin": "Password must be at least 8 characters",
+            "passwordRequired": "Password is required",
+
+            "confirmPasswordRequired": "Please confirm your password",
+            "confirmPasswordMismatch": "Passwords do not match"
+        },
+
+        "messages": {
+            "loginSuccess": "Login successful!",
+            "loginError": "Login failed. Please try again!",
+
+            "registerSuccessEmail": "A verification link has been sent to <strong>{{email}}</strong>. Please check your email to verify your account.",
+            "registerErrorMessage": "Registration failed. Please try again.",
+
+            "registerSuccess": "Registration successful!",
+            "registerError": "Registration failed. Please try again.",
+
+            "logoutSuccess": "Logged out successfully"
+        },
+
+        "forgotPasswordPage": {
+            "title": "Trouble with logging in?",
+            "description": "Enter your email address and we'll send you a link to get back into your account.",
+            "inputPlaceholder": "Email address",
+            "submitButton": "Send login link",
+            "sending": "Sending",
+            "successMessage": "Check your email for a link to reset your password",
+            "errorMessage": "Unable to send link. Please try again."
+        },
+
+        "resetPasswordPage": {
+            "title": "Reset password",
+            "description": "Enter a new password for your account",
+            "newPassword": "New password",
+            "confirmPassword": "Re-type new password",
+            "submitButton": "Change password",
+            "changing": "Changing",
+
+            "tokenInvalid": "The reset link is invalid or has expired",
+            "tokenExpired": "The password reset link has expired",
+            "resetSuccess": "Password reset successfully, please log in",
+            "resetError": "An error occurred, please try again later"
+        },
+
+        "verifyEmailPage": {
+            "title": "The link has expired or is invalid",
+            "description": "Please request a new verification email or log in.",
+            "resendButton": "Resend verification email",
+            "loginButton": "Go to login page",
+            "verifying": "Verifying...",
+            "success": "Account verified successfully! You can now log in to start using Threads.",
+            "resendSuccess": "Verification email sent!",
+            "resendError": "Failed to send email. Please try again.",
+            "resending": "Sending...",
+            "resendTitle": "Verify your email",
+            "resendDescription": "Enter the email you registered with to get a new verification link.",
+            "emailPlaceholder": "Email address",
+            "emailRequired": "Please enter your email."
+        }
+    },
+
+    "homePage": {
+        "endMessage": "That’s all for now",
+        "followingEmpty": "Follow people to see their posts here"
+    },
+
+    "footer": {
+        "terms": "Threads Terms",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookies Policy",
+        "cookieSettings": "Cookie Settings",
+        "report": "Report a problem"
+    },
+
+    "feed": {
+        "home": "Home",
+        "forYou": "For you",
+        "following": "Following"
+    },
+
+    "post": {
+        "whatsNew": "What's new?",
+        "postButton": "Post"
+    },
+
+    "postMenuContent": {
+        "addFeed": "Add to feed",
+        "createFeed": "Create new feed",
+        "save": "Save",
+        "notInterested": "Not interested",
+        "mute": "Mute",
+        "restrict": "Restrict",
+        "block": "Block",
+        "report": "Report",
+        "copy": "Copy link"
+    },
+
+    "repostedLabel": {
+        "other": "reposted",
+        "me": "You reposted"
+    },
+
+    "quotedPost": {
+        "unavailable": "This post is no longer available",
+        "isQuote": "Quoted a post"
+    },
+
+    "threadModal": {
+        "newThread": {
+            "title": "New thread",
+            "placeholder": "What's new?"
+        },
+
+        "reply": {
+            "title": "Reply",
+            "placeholder": "Reply to",
+            "options": "Reply options"
+        },
+
+        "actions": {
+            "cancel": "Cancel",
+            "post": "Post",
+            "posting": "Posting..."
+        },
+
+        "content": {
+            "addTopic": "Add a topic",
+            "addToThread": "Add to thread"
+        },
+
+        "sharedMenu": {
+            "copyLink": "Copy link",
+            "copyImage": "Copy as image",
+            "getEmbedCode": "Get embed code"
+        },
+
+        "repostMenu": {
+            "repost": "Repost",
+            "removeRepost": "Remove",
+            "quote": "Quote"
+        }
+    },
+
+    "profilePage": {
+        "profile": "Profile",
+        "editProfile": "Edit Profile",
+        "notFound": "This user could not be found.",
+        "loadError": "Could not load the profile. Please try again.",
+        "loginRequired": "Log in to see your profile.",
+        "editModal": {
+            "title": "Edit profile",
+            "changeAvatar": "Change avatar",
+            "name": "Name",
+            "namePlaceholder": "Display name",
+            "bio": "Bio",
+            "bioPlaceholder": "Tell people about yourself",
+            "cancel": "Cancel",
+            "save": "Save",
+            "saving": "Saving...",
+            "success": "Profile updated!",
+            "error": "Update failed. Please try again."
+        },
+        "follower": "Follower",
+        "follow": "Follow",
+        "followingButton": "Following",
+        "followModal": {
+            "followers": "Followers",
+            "following": "Following",
+            "followersEmpty": "No followers yet",
+            "followingEmpty": "Not following anyone yet"
+        },
+        "followers": "followers",
+
+        "tabs": {
+            "threads": "Threads",
+            "threadsNote": "No posts yet",
+
+            "replies": "Replies",
+            "repliesNote": "Your replies will appear here",
+            "repliesNoteOther": "No replies yet",
+
+            "media": "Media",
+            "mediaNote": "Your media will appear here",
+            "mediaNoteOther": "No media yet",
+
+            "reposts": "Reposts",
+            "repostsNote": "Your reposts will appear here",
+            "repostsNoteOther": "No reposts yet"
+        }
+    }
+}
