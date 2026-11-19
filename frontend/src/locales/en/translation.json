@@ -234,6 +234,12 @@
         "follower": "Follower",
         "follow": "Follow",
         "followingButton": "Following",
+        "followModal": {
+            "followers": "Followers",
+            "following": "Following",
+            "followersEmpty": "No followers yet",
+            "followingEmpty": "Not following anyone yet"
+        },
         "followers": "followers",
 
         "tabs": {

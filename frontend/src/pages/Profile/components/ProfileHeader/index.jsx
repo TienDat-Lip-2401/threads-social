@@ -9,6 +9,7 @@ import verifiedIcon from '@/assets/icons/verified-icon.svg';
 import LoginAlertDialog from '@/components/LoginAlertDialog';
 import { useCurrentUser } from '@/features/auth';
 import { useFollowState, useToggleFollow } from '@/features/follows';
+import FollowListModal from '../FollowListModal';
 
 // profile: { username, name, bio, avatar_url, verified, posts_count, is_me,
 //            followers_count, following_count, is_following, followers_preview } từ GET users/{username}
@@ -17,6 +18,7 @@ function ProfileHeader({ profile, onEditProfile }) {
     const currentUser = useCurrentUser();
     const toggleFollow = useToggleFollow();
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const [isFollowListOpen, setIsFollowListOpen] = useState(false);
     const follow = useFollowState(profile.id, {
         isFollowing: profile.is_following,
         followersCount: profile.followers_count,
@@ -85,8 +87,12 @@ function ProfileHeader({ profile, onEditProfile }) {
 
             {/* Social Stats & Links */}
             <section className='flex items-center justify-between'>
-                {/* Followers */}
-                <div className='flex items-center gap-2'>
+                {/* Followers: bấm → modal danh sách */}
+                <button
+                    type='button'
+                    onClick={() => setIsFollowListOpen(true)}
+                    className='flex items-center gap-2'
+                >
                     {preview.length > 0 && (
                         <div className='flex'>
                             {preview.slice(0, 3).map((u, index) => (
@@ -99,10 +105,10 @@ function ProfileHeader({ profile, onEditProfile }) {
                             ))}
                         </div>
                     )}
-                    <span className='text-sm font-light text-gray-400'>
+                    <span className='text-sm font-light text-gray-400 hover:underline'>
                         {`${follow.followersCount ?? 0} ${t('profilePage.followers')}`}
                     </span>
-                </div>
+                </button>
 
                 {/* Social Links */}
                 <nav>
@@ -158,6 +164,15 @@ function ProfileHeader({ profile, onEditProfile }) {
                         ? t('profilePage.followingButton')
                         : t('profilePage.follow')}
                 </button>
+            )}
+
+            {isFollowListOpen && (
+                <FollowListModal
+                    open={isFollowListOpen}
+                    onOpenChange={setIsFollowListOpen}
+                    profile={profile}
+                    followersCount={follow.followersCount}
+                />
             )}
 
             {isLoginOpen && (

@@ -233,6 +233,12 @@
         },
         "follow": "Theo dõi",
         "followingButton": "Đang theo dõi",
+        "followModal": {
+            "followers": "Người theo dõi",
+            "following": "Đang theo dõi",
+            "followersEmpty": "Chưa có người theo dõi",
+            "followingEmpty": "Chưa theo dõi ai"
+        },
         "followers": "người theo dõi",
 
         "tabs": {

@@ -40,3 +40,13 @@ export const toggleFollow = createAsyncThunk(
         }
     },
 );
+
+// GET users/{username}/followers | following → { data: [{ id, username, name, avatar_url, is_following, is_me }], pagination }
+// type: 'followers' | 'following'
+export const getFollowList = async (username, type, page = 1, perPage = 20) => {
+    const response = await http.get(
+        `users/${encodeURIComponent(username)}/${type}`,
+        { params: { page, per_page: perPage } },
+    );
+    return response; // { data, pagination }
+};
