@@ -163,11 +163,20 @@ namespace Pharse2.Services.Implement
         }
 
         // Trả { data: [...posts], pagination: {...} } đúng dạng FE đọc
-        public async Task<ApiResponse> GetFeedAsync(int pageNumber, int pageSize)
+        // type: "following" → feed Đang theo dõi (bắt buộc đăng nhập); còn lại → Dành cho bạn
+        public async Task<ApiResponse> GetFeedAsync(int pageNumber, int pageSize, string? type)
         {
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50); // chặn per_page quá lớn
-            var page = await _postRepository.GetFeedAsync(pageNumber, pageSize, _commonService.GetUserId());
+            var viewerId = _commonService.GetUserId();
+            var isFollowing = type == "following";
+            if (isFollowing && viewerId == 0)
+            {
+                return ApiResponse.Response(401, "Vui lòng đăng nhập để xem bài của người bạn theo dõi.");
+            }
+            var page = isFollowing
+                ? await _postRepository.GetFollowingFeedAsync(pageNumber, pageSize, viewerId)
+                : await _postRepository.GetFeedAsync(pageNumber, pageSize, viewerId);
             page.Items.ForEach(p => p.WithPublicUrls(_mediaStorage));
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");
         }

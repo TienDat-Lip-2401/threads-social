@@ -71,31 +71,73 @@ namespace Pharse2.Repositories.Implement
         }
 
         // Feed: bài mới nhất lên đầu
-        // Feed: mỗi bài 1 lần, xếp theo mốc hoạt động mới nhất = max(lúc đăng, lần repost gần nhất).
+        // 1 dòng thứ tự feed: bài nào, mốc sắp xếp, có phải được repost "đẩy lên" không
+        private class FeedRow
+        {
+            public int Id { get; set; }
+            public bool IsBumped { get; set; }
+            public DateTime SortAt { get; set; }
+        }
+
+        // Feed "Dành cho bạn": mọi bài, mỗi bài 1 lần, xếp theo mốc hoạt động mới nhất = max(lúc đăng, lần repost gần nhất).
         // Repost làm bài "nổi lên" kèm người repost gần nhất (RepostedBy).
-        // shortcut: feed chung của mọi người; khi có follow (#6) chỉ tính repost của người mình theo dõi
         public async Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize, int viewerId)
         {
-            // B1: thứ tự + phân trang (chỉ lấy id và mốc thời gian)
-            var rows = await _context.Posts
+            var rows = _context.Posts
                 .Where(p => !p.DeleteFlg)
                 .Select(p => new { p.Id, p.CreatedAt, LastRepostAt = p.Reposts.Max(r => (DateTime?)r.CreatedAt) })
-                .Select(x => new
+                .Select(x => new FeedRow
                 {
-                    x.Id,
+                    Id = x.Id,
                     IsBumped = x.LastRepostAt != null && x.LastRepostAt > x.CreatedAt,
                     SortAt = x.LastRepostAt != null && x.LastRepostAt > x.CreatedAt ? x.LastRepostAt.Value : x.CreatedAt,
+                });
+            return await GetFeedPageAsync(rows, r => true, pageNumber, pageSize, viewerId);
+        }
+
+        // Feed "Đang theo dõi": S = người mình theo dõi + chính mình.
+        // Lấy bài của S, hoặc bài (của bất kỳ ai) được người trong S repost.
+        // Mốc sắp xếp chỉ tính lúc đăng (nếu tác giả thuộc S) và repost của người trong S → người lạ repost không đẩy bài lên.
+        public async Task<PagedResult<PostResponseDto>> GetFollowingFeedAsync(int pageNumber, int pageSize, int viewerId)
+        {
+            var followeeIds = _context.Follows.Where(f => f.FollowerId == viewerId).Select(f => f.FolloweeId);
+            var rows = _context.Posts
+                .Where(p => !p.DeleteFlg)
+                .Select(p => new
+                {
+                    p.Id,
+                    OwnAt = p.UserId == viewerId || followeeIds.Contains(p.UserId) ? (DateTime?)p.CreatedAt : null,
+                    LastRepostAt = p.Reposts
+                        .Where(r => r.UserId == viewerId || followeeIds.Contains(r.UserId))
+                        .Max(r => (DateTime?)r.CreatedAt),
                 })
+                .Where(x => x.OwnAt != null || x.LastRepostAt != null)
+                .Select(x => new FeedRow
+                {
+                    Id = x.Id,
+                    IsBumped = x.LastRepostAt != null && (x.OwnAt == null || x.LastRepostAt > x.OwnAt),
+                    SortAt = x.LastRepostAt != null && (x.OwnAt == null || x.LastRepostAt > x.OwnAt) ? x.LastRepostAt.Value : x.OwnAt!.Value,
+                });
+            return await GetFeedPageAsync(rows, r => r.UserId == viewerId || followeeIds.Contains(r.UserId), pageNumber, pageSize, viewerId);
+        }
+
+        // Dùng chung 2 feed: phân trang theo thứ tự rows, lấy dữ liệu bài, gắn người repost gần nhất (lọc theo repostFilter)
+        private async Task<PagedResult<PostResponseDto>> GetFeedPageAsync(IQueryable<FeedRow> rows,
+            System.Linq.Expressions.Expression<Func<Repost, bool>> repostFilter, int pageNumber, int pageSize, int viewerId)
+        {
+            // B1: thứ tự + phân trang (chỉ lấy id và mốc thời gian)
+            var page = await rows
                 .OrderByDescending(x => x.SortAt).ThenByDescending(x => x.Id)
                 .ToPageResultAsync(pageNumber, pageSize);
 
             // B2: dữ liệu đầy đủ của các bài trong trang
-            var posts = (await GetPostDtosByIdsAsync(rows.Items.Select(r => r.Id), viewerId)).ToDictionary(p => p.Id);
+            var posts = (await GetPostDtosByIdsAsync(page.Items.Select(r => r.Id), viewerId)).ToDictionary(p => p.Id);
 
             // B3: người repost gần nhất của các bài được repost "đẩy lên"
             // shortcut: lấy mọi repost của các bài này rồi chọn mới nhất trong bộ nhớ (ổn khi mỗi bài ít repost)
-            var bumpedIds = rows.Items.Where(r => r.IsBumped).Select(r => r.Id).ToList();
+            var bumpedIds = page.Items.Where(r => r.IsBumped).Select(r => r.Id).ToList();
             var latestReposts = (await _context.Reposts
+                    .Where(repostFilter)
                     .Where(r => bumpedIds.Contains(r.PostId))
                     .Select(r => new
                     {
@@ -107,7 +149,7 @@ namespace Pharse2.Repositories.Implement
                 .GroupBy(r => r.PostId)
                 .ToDictionary(g => g.Key, g => g.MaxBy(r => r.CreatedAt)!);
 
-            var items = rows.Items
+            var items = page.Items
                 .Where(r => posts.ContainsKey(r.Id)) // bài vừa bị xóa giữa các query → bỏ
                 .Select(r =>
                 {
@@ -119,7 +161,7 @@ namespace Pharse2.Repositories.Implement
                     }
                     return dto;
                 }).ToList();
-            return new PagedResult<PostResponseDto>(items, rows.TotalItems, rows.CurrentPage, rows.PageSize);
+            return new PagedResult<PostResponseDto>(items, page.TotalItems, page.CurrentPage, page.PageSize);
         }
 
         // Trang hồ sơ: bài của 1 user, mới nhất lên đầu
