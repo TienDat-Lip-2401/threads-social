@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -5,10 +6,40 @@ import insightIcon from '@/assets/icons/insight-icon.svg';
 import instagramIcon from '@/assets/icons/instagram-icon.svg';
 import defaultAvatar from '@/assets/images/default-avatar.jpeg';
 import verifiedIcon from '@/assets/icons/verified-icon.svg';
+import LoginAlertDialog from '@/components/LoginAlertDialog';
+import { useCurrentUser } from '@/features/auth';
+import { useFollowState, useToggleFollow } from '@/features/follows';
 
-// profile: { username, name, bio, avatar_url, verified, posts_count, is_me } từ GET users/{username}
+// profile: { username, name, bio, avatar_url, verified, posts_count, is_me,
+//            followers_count, following_count, is_following, followers_preview } từ GET users/{username}
 function ProfileHeader({ profile, onEditProfile }) {
     const { t } = useTranslation();
+    const currentUser = useCurrentUser();
+    const toggleFollow = useToggleFollow();
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const follow = useFollowState(profile.id, {
+        isFollowing: profile.is_following,
+        followersCount: profile.followers_count,
+    });
+
+    // Avatar người theo dõi: theo dõi / bỏ theo dõi ngay trên trang → thêm / bớt mình ở đầu
+    const preview = (profile.followers_preview || []).filter(
+        (u) => u.id !== currentUser?.id,
+    );
+    if (follow.isFollowing && currentUser) preview.unshift(currentUser);
+
+    const handleFollow = () => {
+        if (!currentUser) {
+            setIsLoginOpen(true);
+            return;
+        }
+        toggleFollow({
+            userId: profile.id,
+            username: profile.username,
+            isFollowing: follow.isFollowing,
+            followersCount: follow.followersCount,
+        });
+    };
 
     const avatarSrc = profile?.avatar_url || defaultAvatar;
     const isVerified = profile?.verified;
@@ -56,25 +87,20 @@ function ProfileHeader({ profile, onEditProfile }) {
             <section className='flex items-center justify-between'>
                 {/* Followers */}
                 <div className='flex items-center gap-2'>
-                    <div className='flex'>
-                        <img
-                            src='https://img.freepik.com/free-vector/cute-cat-face-logo-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated-flat-vector_138676-9478.jpg?semt=ais_hybrid&w=740&q=80'
-                            alt='followers'
-                            className='h- block w-5 rounded-full border border-white object-cover'
-                        />
-                        <img
-                            src='https://img.freepik.com/free-vector/cute-cat-face-logo-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated-flat-vector_138676-9478.jpg?semt=ais_hybrid&w=740&q=80'
-                            alt='followers'
-                            className='-ml-1.5 block h-5 w-5 rounded-full border border-white object-cover'
-                        />
-                        <img
-                            src='https://img.freepik.com/free-vector/cute-cat-face-logo-cartoon-vector-icon-illustration-animal-nature-icon-concept-isolated-flat-vector_138676-9478.jpg?semt=ais_hybrid&w=740&q=80'
-                            alt='followers'
-                            className='-ml-1.5 block h-5 w-5 rounded-full border border-white object-cover'
-                        />
-                    </div>
+                    {preview.length > 0 && (
+                        <div className='flex'>
+                            {preview.slice(0, 3).map((u, index) => (
+                                <img
+                                    key={u.id}
+                                    src={u.avatar_url || defaultAvatar}
+                                    alt={u.username}
+                                    className={`block h-5 w-5 rounded-full border border-white object-cover ${index > 0 ? '-ml-1.5' : ''}`}
+                                />
+                            ))}
+                        </div>
+                    )}
                     <span className='text-sm font-light text-gray-400'>
-                        {`21 ${t('profilePage.followers')}`}
+                        {`${follow.followersCount ?? 0} ${t('profilePage.followers')}`}
                     </span>
                 </div>
 
@@ -119,7 +145,26 @@ function ProfileHeader({ profile, onEditProfile }) {
                     {t('profilePage.editProfile')}
                 </button>
             ) : (
-                <div className='my-3' />
+                <button
+                    type='button'
+                    onClick={handleFollow}
+                    className={
+                        follow.isFollowing
+                            ? 'my-5 block w-full rounded-md border border-gray-400/50 py-1 text-sm font-medium'
+                            : 'my-5 block w-full rounded-md border border-black bg-black py-1 text-sm font-medium text-white dark:border-white dark:bg-white dark:text-black'
+                    }
+                >
+                    {follow.isFollowing
+                        ? t('profilePage.followingButton')
+                        : t('profilePage.follow')}
+                </button>
+            )}
+
+            {isLoginOpen && (
+                <LoginAlertDialog
+                    isOpen={isLoginOpen}
+                    onClose={() => setIsLoginOpen(false)}
+                />
             )}
         </header>
     );

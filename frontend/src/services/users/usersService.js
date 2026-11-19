@@ -1,3 +1,5 @@
+import { createAsyncThunk } from '@reduxjs/toolkit';
+
 import http from '@/utils/http';
 
 // GET users/{username} → hồ sơ công khai (kèm is_me nếu đang đăng nhập)
@@ -18,3 +20,23 @@ export const updateProfile = async ({ name, bio, avatar }) => {
     });
     return response.data;
 };
+
+// POST users/{username}/follow → { is_following, followers_count }
+// arg: { userId, username, isFollowing, followersCount } = trạng thái TRƯỚC khi bấm
+// (followsSlice đổi UI ngay ở pending, đồng bộ server ở fulfilled, trả lại ở rejected)
+export const toggleFollow = createAsyncThunk(
+    'follows/toggle',
+    async ({ username }, { rejectWithValue }) => {
+        try {
+            const response = await http.post(
+                `users/${encodeURIComponent(username)}/follow`,
+            );
+            return response.data;
+        } catch (error) {
+            return rejectWithValue({
+                message: error.response?.data?.message || error.message,
+                status: error.response?.status,
+            });
+        }
+    },
+);

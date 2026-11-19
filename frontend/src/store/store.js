@@ -13,6 +13,7 @@ import storage from 'redux-persist/lib/storage';
 
 import { authReducer } from '@/features/auth';
 import { postsReducer } from '@/features/posts';
+import { followsReducer } from '@/features/follows';
 
 // Config Redux Persist - CHỈ persist interactions
 const postsPersistConfig = {
@@ -33,6 +34,7 @@ export const store = configureStore({
     reducer: {
         auth: authReducer,
         posts: persistedPostsReducer,
+        follows: followsReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

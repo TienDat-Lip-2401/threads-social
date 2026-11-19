@@ -231,6 +231,8 @@
             "success": "Đã cập nhật trang cá nhân!",
             "error": "Cập nhật thất bại. Vui lòng thử lại."
         },
+        "follow": "Theo dõi",
+        "followingButton": "Đang theo dõi",
         "followers": "người theo dõi",
 
         "tabs": {

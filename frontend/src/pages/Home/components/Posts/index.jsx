@@ -61,6 +61,8 @@ function Posts({ posts, hasMore }) {
                             timeAgo={post.created_at}
                             quotedPostId={post.quoted_post_id}
                             quotedPost={post.quoted_post}
+                            userId={post.user.id}
+                            isFollowing={post.user.is_following}
                             repostedBy={post.reposted_by}
                         />
                     ))}

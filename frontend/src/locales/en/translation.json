@@ -232,6 +232,8 @@
             "error": "Update failed. Please try again."
         },
         "follower": "Follower",
+        "follow": "Follow",
+        "followingButton": "Following",
         "followers": "followers",
 
         "tabs": {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { IoIosMore } from 'react-icons/io';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +10,9 @@ import ImageCarousel from '../ImageCarousel';
 import PostDropdown from './components/PostDropdown';
 import QuotedPostCard from '../QuotedPostCard';
 import RepostedLabel from './components/RepostedLabel';
+import LoginAlertDialog from '@/components/LoginAlertDialog';
+import { useCurrentUser } from '@/features/auth';
+import { useFollowState, useToggleFollow } from '@/features/follows';
 
 // const images = [
 //     'https://hips.hearstapps.com/hmg-prod/images/gettyimages-1144982182.jpg',
@@ -31,7 +35,30 @@ function PostCard({
     quotedPostId = null, // Quote: có id nhưng quotedPost = null → bài gốc đã bị xóa
     quotedPost = null,
     repostedBy = null, // Feed: người repost gần nhất → hiện "X đã đăng lại"
+    userId = null, // Tác giả: có id mới hiện dấu + để theo dõi
+    isFollowing = false, // user.is_following từ API
 }) {
+    const currentUser = useCurrentUser();
+    const toggleFollow = useToggleFollow();
+    const follow = useFollowState(userId, { isFollowing });
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+    // Dấu + : chưa theo dõi và không phải bài của mình
+    const canFollow =
+        !isForCapture &&
+        showPlusIcon &&
+        userId != null &&
+        currentUser?.id !== userId &&
+        !follow.isFollowing;
+
+    const handleFollow = () => {
+        if (!currentUser) {
+            setIsLoginOpen(true);
+            return;
+        }
+        toggleFollow({ userId, username, isFollowing: false });
+    };
+
     return (
         <div
             className={cn(
@@ -53,7 +80,8 @@ function PostCard({
                 {/* Avatar */}
                 <PostAvatar
                     src={avatar}
-                    showPlusIcon={!isForCapture && showPlusIcon}
+                    showPlusIcon={canFollow}
+                    onPlusClick={handleFollow}
                 />
 
                 {/* Content */}
@@ -103,6 +131,13 @@ function PostCard({
             <div className={cn(!isForCapture && 'px-14')}>
                 <InteractionBar postId={postId} showMetrics={showMetrics} />
             </div>
+
+            {isLoginOpen && (
+                <LoginAlertDialog
+                    isOpen={isLoginOpen}
+                    onClose={() => setIsLoginOpen(false)}
+                />
+            )}
         </div>
     );
 }
