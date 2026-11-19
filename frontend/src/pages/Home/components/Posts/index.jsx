@@ -9,7 +9,7 @@ import { useIsAuthenticated } from '@/features/auth';
 import { loadMorePosts } from '@/services/posts';
 import { useIsFetchingMore } from '@/features/posts';
 
-function Posts({ posts, hasMore }) {
+function Posts({ posts, hasMore, feedType = 'for_you' }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const isAuthenticated = useIsAuthenticated();
@@ -40,7 +40,10 @@ function Posts({ posts, hasMore }) {
                     endMessage={
                         <div className='py-4 text-center'>
                             <p className='text-base text-gray-500 md:text-sm'>
-                                {t('homePage.endMessage')}
+                                {/* Feed Đang theo dõi trống → gợi ý theo dõi thêm */}
+                                {posts.length === 0 && feedType === 'following'
+                                    ? t('homePage.followingEmpty')
+                                    : t('homePage.endMessage')}
                             </p>
                         </div>
                     }

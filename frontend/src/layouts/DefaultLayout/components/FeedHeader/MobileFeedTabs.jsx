@@ -21,7 +21,7 @@ function MobileFeedTabs() {
             </NavLink>
 
             <NavLink
-                to='/following'
+                to={ROUTES.FOLLOWING}
                 className={({ isActive }) => cn(TAB_BASE_CLASSES, isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES)}
             >
                 {t('feed.following')}

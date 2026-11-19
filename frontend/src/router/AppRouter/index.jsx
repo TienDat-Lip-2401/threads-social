@@ -33,6 +33,7 @@ function AppRouter() {
                 {/* PUBLIC ROUTES - Home độc lập */}
                 <Route element={<DefaultLayout />}>
                     <Route path={ROUTES.HOME} element={<Home />} />
+                    <Route path={ROUTES.FOLLOWING} element={<Home />} />
 
                     {/* /profile = hồ sơ của mình, /profile/:username = hồ sơ người khác */}
                     {[ROUTES.PROFILE, ROUTES.PROFILE_USER].map((path) => (

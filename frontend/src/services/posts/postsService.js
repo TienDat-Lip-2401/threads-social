@@ -69,17 +69,19 @@ export const loadMorePosts = createAsyncThunk(
 
             // Lấy trang hiện tại & tính trang kế tiếp
             const nextPage = posts.currentPage + 1;
+            const type = posts.feedType;
 
-            // Gọi API để lấy thêm posts
+            // Gọi API để lấy thêm posts (đúng feed đang xem)
             const response = await http.get('posts/feed', {
                 params: {
-                    type: 'for_you', // TODO: Make dynamic based on active tab
+                    type,
                     page: nextPage,
                     per_page: 10,
                 },
             });
 
-            return response;
+            // Kèm type để reducer bỏ response trễ khi user đã đổi feed
+            return { ...response, type };
         } catch (error) {
             // Trả lỗi cho reducer xử lý
             return rejectWithValue({

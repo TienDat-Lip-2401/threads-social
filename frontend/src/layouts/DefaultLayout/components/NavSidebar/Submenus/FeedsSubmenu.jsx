@@ -14,9 +14,12 @@ import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 
 import MenuItem from '@/components/MenuItem'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+import { ROUTES } from '@/constants'
 
 function FeedsSubmenu({ onBack }) {
     const { t } = useTranslation()
+    const navigate = useNavigate()
 
     return (
         <>
@@ -38,8 +41,8 @@ function FeedsSubmenu({ onBack }) {
 
                 {/* Feed options */}
                 <div className='space-y-1'>
-                    <MenuItem>{t('feeds.forYou')}</MenuItem>
-                    <MenuItem>{t('feeds.following')}</MenuItem>
+                    <MenuItem onClick={() => navigate(ROUTES.HOME)}>{t('feeds.forYou')}</MenuItem>
+                    <MenuItem onClick={() => navigate(ROUTES.FOLLOWING)}>{t('feeds.following')}</MenuItem>
 
                     {/* Ghost posts with arrow & icon */}
                     <MenuItem icon={<TbGhost2 size={20} className='text-gray-700 dark:text-white' />}>

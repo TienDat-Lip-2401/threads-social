@@ -1,6 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 export const selectAllPosts = (state) => state.posts.posts;
+export const selectFeedType = (state) => state.posts.feedType;
 export const selectProfilePosts = (state) => state.posts.profile;
 export const selectProfileReposts = (state) => state.posts.profileReposts;
 export const selectProfileReplies = (state) => state.posts.profileReplies;

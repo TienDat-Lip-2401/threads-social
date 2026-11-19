@@ -1,5 +1,6 @@
 const ROUTES = {
     HOME: '/',
+    FOLLOWING: '/following', // feed Đang theo dõi (cần đăng nhập)
     LOGIN: '/login',
     REGISTER: '/register',
     FORGOT_PASSWORD: '/forgot-password',

@@ -4,6 +4,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { getPosts, loadMorePosts } from '@/services/posts';
 import {
     selectAllPosts,
+    selectFeedType,
     selectHasMore,
     selectIsFetchingMore,
     selectIsInitialLoading,
@@ -20,12 +21,13 @@ import {
 
 // Với createAsyncThunk (Redux Toolkit)
 // Just dispatch! API call happens automatically
-export const useFetchPosts = () => {
+// type: 'for_you' | 'following' → đổi feed thì tải lại trang 1
+export const useFetchPosts = (type = 'for_you') => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getPosts());
-    }, [dispatch]);
+        dispatch(getPosts({ type }));
+    }, [dispatch, type]);
 };
 
 // ========================================
@@ -137,6 +139,7 @@ export const useRepostedPosts = () => useSelector(selectRepostedPosts);
 export const useRepostedPostIds = () => useSelector(selectRepostedPostIds);
 
 export const useAllPosts = () => useSelector(selectAllPosts);
+export const useFeedType = () => useSelector(selectFeedType);
 
 export const useHasMore = () => useSelector(selectHasMore);
 

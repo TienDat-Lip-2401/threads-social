@@ -132,7 +132,8 @@
     },
 
     "homePage": {
-        "endMessage": "Không còn bài viết nào nữa"
+        "endMessage": "Không còn bài viết nào nữa",
+        "followingEmpty": "Theo dõi mọi người để xem bài của họ tại đây"
     },
 
     "footer": {

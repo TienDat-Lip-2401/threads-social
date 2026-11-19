@@ -51,6 +51,8 @@ const initialState = {
         hasMore: true,
         isLoading: false,
     },
+    // Feed đang xem: 'for_you' | 'following' (posts bên trên là của feed này)
+    feedType: 'for_you',
     currentPage: 1,
     hasMore: true,
     totalPosts: 0,
@@ -330,11 +332,18 @@ export const postsSlice = createSlice({
         // GET POSTS (Initial Load)
         // ============================================
         builder
-            .addCase(getPosts.pending, (state) => {
+            .addCase(getPosts.pending, (state, action) => {
+                const type = action.meta.arg?.type || 'for_you';
+                // Đổi feed → bỏ bài của feed cũ
+                if (state.feedType !== type) state.posts = [];
+                state.feedType = type;
                 state.isInitialLoading = true;
                 state.error = null;
             })
             .addCase(getPosts.fulfilled, (state, action) => {
+                // Response trễ của feed trước đó → bỏ
+                if ((action.meta.arg?.type || 'for_you') !== state.feedType)
+                    return;
                 state.isInitialLoading = false;
 
                 const { data, pagination } = action.payload;
@@ -370,6 +379,8 @@ export const postsSlice = createSlice({
                 });
             })
             .addCase(getPosts.rejected, (state, action) => {
+                if ((action.meta.arg?.type || 'for_you') !== state.feedType)
+                    return;
                 state.isInitialLoading = false;
                 state.error = action.payload;
             });
@@ -384,6 +395,8 @@ export const postsSlice = createSlice({
             })
             .addCase(loadMorePosts.fulfilled, (state, action) => {
                 state.isFetchingMore = false;
+                // Trang của feed trước đó (user vừa đổi feed) → bỏ
+                if (action.payload.type !== state.feedType) return;
 
                 const { data, pagination } = action.payload;
 

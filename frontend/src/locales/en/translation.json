@@ -132,7 +132,8 @@
     },
 
     "homePage": {
-        "endMessage": "That’s all for now"
+        "endMessage": "That’s all for now",
+        "followingEmpty": "Follow people to see their posts here"
     },
 
     "footer": {
