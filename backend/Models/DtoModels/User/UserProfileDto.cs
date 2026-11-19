@@ -11,6 +11,12 @@
         // shortcut: chưa có tích xanh, luôn false
         public bool Verified { get; set; }
         public int PostsCount { get; set; }
+        public int FollowersCount { get; set; }
+        public int FollowingCount { get; set; }
+        // Người đang xem có theo dõi hồ sơ này không (khách / chính mình → false)
+        public bool IsFollowing { get; set; }
+        // Avatar 3 người theo dõi gần nhất (thay cho ảnh mẫu trên FE)
+        public List<PostUserDto> FollowersPreview { get; set; } = new();
         // Hồ sơ của chính user đang xem → FE hiện nút sửa hồ sơ
         public bool IsMe { get; set; }
     }

@@ -33,6 +33,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Repost> Reposts { get; set; }
 
+    public virtual DbSet<Follow> Follows { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Comment>(entity =>
@@ -170,6 +172,25 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserTokens)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Follow>(entity =>
+        {
+            entity.HasKey(e => new { e.FollowerId, e.FolloweeId });
+
+            entity.ToTable("Follow");
+
+            // Đếm / liệt kê người theo dõi 1 user, mới nhất trước
+            entity.HasIndex(e => new { e.FolloweeId, e.CreatedAt });
+
+            // 2 FK cùng trỏ về User → SQL Server không cho 2 đường cascade → NoAction (user chỉ bị xóa mềm)
+            entity.HasOne(d => d.Follower).WithMany(p => p.Followings)
+                .HasForeignKey(d => d.FollowerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(d => d.Followee).WithMany(p => p.Followers)
+                .HasForeignKey(d => d.FolloweeId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Repost>(entity =>

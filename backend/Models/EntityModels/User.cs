@@ -30,6 +30,11 @@ public partial class User : EntityBaseModel
 
     public virtual ICollection<Repost> Reposts { get; set; } = new List<Repost>();
 
+    // Người theo dõi user này / những người user này đang theo dõi
+    public virtual ICollection<Follow> Followers { get; set; } = new List<Follow>();
+
+    public virtual ICollection<Follow> Followings { get; set; } = new List<Follow>();
+
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public virtual ICollection<UserToken> UserTokens { get; set; } = new List<UserToken>();

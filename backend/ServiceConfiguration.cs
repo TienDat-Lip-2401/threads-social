@@ -41,6 +41,7 @@ namespace Pharse2
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<ILikePostRepository, LikePostRepository>();
             services.AddScoped<IRepostRepository, RepostRepository>();
+            services.AddScoped<IFollowRepository, FollowRepository>();
             services.AddScoped<ILikeCommentRepository, LikeCommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserRepository, UserRepository>();

@@ -41,6 +41,14 @@ namespace Pharse2.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        // FE: POST users/{username}/follow → bật/tắt theo dõi (bắt buộc đăng nhập)
+        [HttpPost("{username}/follow")]
+        public async Task<IActionResult> ToggleFollow(string username)
+        {
+            var response = await _userService.ToggleFollowAsync(username);
+            return StatusCode(response.StatusCode, response);
+        }
+
         // FE: GET users/{username}/replies?page=1&per_page=10
         [HttpGet("{username}/replies")]
         [AllowAnonymous]

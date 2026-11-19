@@ -48,7 +48,11 @@ namespace Pharse2.Models.DtoModels
             Content = p.Content,
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,
-            User = new PostUserDto { Id = p.User.Id, Username = p.User.Username, Name = p.User.Name, AvatarUrl = p.User.AvatarPath },
+            User = new PostUserDto
+            {
+                Id = p.User.Id, Username = p.User.Username, Name = p.User.Name, AvatarUrl = p.User.AvatarPath,
+                IsFollowing = p.User.Followers.Any(f => f.FollowerId == viewerId),
+            },
             MediaUrls = p.Media.Where(m => m.CommentId == null && !m.DeleteFlg)
                 .OrderBy(m => m.SortOrder).Select(m => m.Path).ToList(),
             LikesCount = p.LikePosts.Count(),
@@ -100,5 +104,8 @@ namespace Pharse2.Models.DtoModels
         public string? AvatarUrl { get; set; }
         // shortcut: chưa có tích xanh, luôn false
         public bool Verified { get; set; }
+        // Người đang xem có theo dõi tác giả không → FE ẩn dấu + trên avatar.
+        // Chỉ điền ở danh sách bài (PostResponseDto.User); nơi khác luôn false.
+        public bool IsFollowing { get; set; }
     }
 }

@@ -2,6 +2,8 @@
 using Pharse2.Models.CommonModels;
 using Pharse2.Models.DtoModels;
 using Pharse2.Models.DtoModels.Comment;
+using Pharse2.Models.EntityModels;
+using Microsoft.EntityFrameworkCore;
 using Pharse2.Models.DtoModels.User;
 using Pharse2.Repositories.Interfaces;
 using Pharse2.Services.Interfaces;
@@ -16,10 +18,12 @@ namespace Pharse2.Services.Implement
         private readonly IUserRepository _userRepository;
         private readonly IPostRepository _postRepository;
         private readonly ICommentRepository _commentRepository;
+        private readonly IFollowRepository _followRepository;
         private readonly IMediaStorage _mediaStorage;
         private readonly ICommonService _commonService;
-        public UserService(IUserRepository userRepository, IPostRepository postRepository, ICommentRepository commentRepository, IMediaStorage mediaStorage, ICommonService commonService)
+        public UserService(IUserRepository userRepository, IPostRepository postRepository, ICommentRepository commentRepository, IFollowRepository followRepository, IMediaStorage mediaStorage, ICommonService commonService)
         {
+            _followRepository = followRepository;
             _commentRepository = commentRepository;
             _userRepository = userRepository;
             _postRepository = postRepository;
@@ -110,6 +114,9 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(404, "Không tìm thấy người dùng.");
             }
+            var viewerId = _commonService.GetUserId();
+            var preview = await _followRepository.GetFollowersPreviewAsync(user.Id, 3);
+            preview.ForEach(u => u.AvatarUrl = _mediaStorage.ToPublicUrl(u.AvatarUrl));
             var profile = new UserProfileDto
             {
                 Id = user.Id,
@@ -118,7 +125,11 @@ namespace Pharse2.Services.Implement
                 Bio = user.Bio,
                 AvatarUrl = _mediaStorage.ToPublicUrl(user.AvatarPath),
                 PostsCount = await _postRepository.CountByUserAsync(user.Id),
-                IsMe = user.Id == _commonService.GetUserId(),
+                IsMe = user.Id == viewerId,
+                FollowersCount = await _followRepository.CountFollowersAsync(user.Id),
+                FollowingCount = await _followRepository.CountFollowingAsync(user.Id),
+                IsFollowing = viewerId != 0 && await _followRepository.ExistsAsync(viewerId, user.Id),
+                FollowersPreview = preview,
             };
             return ApiResponse.Response(200, "Thành công", profile);
         }
@@ -162,6 +173,50 @@ namespace Pharse2.Services.Implement
                     };
                 }).ToList();
             return ApiResponse.Paged(new PagedResult<UserReplyDto>(items, page.TotalItems, page.CurrentPage, page.PageSize), "Lấy danh sách thành công!");
+        }
+
+        // FE: POST users/{username}/follow → theo dõi nếu chưa, bỏ theo dõi nếu đã theo dõi
+        // Trả { is_following, followers_count } để FE đồng bộ số liệu thật
+        public async Task<ApiResponse> ToggleFollowAsync(string username)
+        {
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null || user.DeleteFlg)
+            {
+                return ApiResponse.Response(404, "Không tìm thấy người dùng.");
+            }
+            var currentUserId = _commonService.GetUserId();
+            if (user.Id == currentUserId)
+            {
+                return ApiResponse.ValidationError(new() { ["username"] = ["Không thể tự theo dõi chính mình!"] });
+            }
+            var existing = await _followRepository.GetAsync(currentUserId, user.Id);
+            if (existing != null)
+            {
+                _followRepository.Remove(existing);
+            }
+            else
+            {
+                await _followRepository.AddAsync(new Follow
+                {
+                    FollowerId = currentUserId,
+                    FolloweeId = user.Id,
+                    CreatedAt = DateTime.UtcNow,
+                });
+            }
+            try
+            {
+                await _followRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // 2 request cùng lúc (bấm liên tục): request kia đã thêm/xóa trước → trả trạng thái hiện tại
+            }
+            var result = new
+            {
+                IsFollowing = await _followRepository.ExistsAsync(currentUserId, user.Id),
+                FollowersCount = await _followRepository.CountFollowersAsync(user.Id),
+            };
+            return ApiResponse.Response(200, result.IsFollowing ? "Đã theo dõi" : "Đã bỏ theo dõi", result);
         }
 
         private static (int, int) NormalizePage(int pageNumber, int pageSize) =>

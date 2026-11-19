@@ -66,6 +66,24 @@ namespace Pharse2.Migrations
                     b.ToTable("Comment", (string)null);
                 });
 
+            modelBuilder.Entity("Pharse2.Models.EntityModels.Follow", b =>
+                {
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FolloweeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("FollowerId", "FolloweeId");
+
+                    b.HasIndex("FolloweeId", "CreatedAt");
+
+                    b.ToTable("Follow", (string)null);
+                });
+
             modelBuilder.Entity("Pharse2.Models.EntityModels.LikeComment", b =>
                 {
                     b.Property<int>("CommentId")
@@ -388,6 +406,25 @@ namespace Pharse2.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.EntityModels.Follow", b =>
+                {
+                    b.HasOne("Pharse2.Models.User", "Followee")
+                        .WithMany("Followers")
+                        .HasForeignKey("FolloweeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Pharse2.Models.User", "Follower")
+                        .WithMany("Followings")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Followee");
+
+                    b.Navigation("Follower");
+                });
+
             modelBuilder.Entity("Pharse2.Models.EntityModels.LikeComment", b =>
                 {
                     b.HasOne("Pharse2.Models.Comment", "Comment")
@@ -530,6 +567,10 @@ namespace Pharse2.Migrations
             modelBuilder.Entity("Pharse2.Models.User", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Followers");
+
+                    b.Navigation("Followings");
 
                     b.Navigation("LikeComments");
 

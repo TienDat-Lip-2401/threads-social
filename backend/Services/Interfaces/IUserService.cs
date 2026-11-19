@@ -13,5 +13,6 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> GetUserRepostsAsync(string username, int pageNumber, int pageSize);
         Task<ApiResponse> GetUserMediaAsync(string username, int pageNumber, int pageSize);
         Task<ApiResponse> GetUserRepliesAsync(string username, int pageNumber, int pageSize);
+        Task<ApiResponse> ToggleFollowAsync(string username);
     }
 }
