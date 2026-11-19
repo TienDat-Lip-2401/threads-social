@@ -3,6 +3,8 @@ import { createSelector } from '@reduxjs/toolkit';
 export const selectAllPosts = (state) => state.posts.posts;
 export const selectProfilePosts = (state) => state.posts.profile;
 export const selectProfileReposts = (state) => state.posts.profileReposts;
+export const selectProfileReplies = (state) => state.posts.profileReplies;
+export const selectProfileMedia = (state) => state.posts.profileMedia;
 
 export const selectIsInitialLoading = (state) => state.posts.isInitialLoading;
 

@@ -217,6 +217,8 @@ export const getReplies = createAsyncThunk(
 // 💡 DANH SÁCH BÀI TRÊN TRANG HỒ SƠ (có phân trang)
 // getUserPosts: tab Threads (GET users/{username}/posts)
 // getUserReposts: tab Reposts (GET users/{username}/reposts)
+// getUserReplies: tab Replies (GET users/{username}/replies) → comment kèm bài gốc (post)
+// getUserMedia: tab Media (GET users/{username}/media) → bài có ảnh
 // ========================================
 const createUserListThunk = (type, path) =>
     createAsyncThunk(
@@ -242,6 +244,11 @@ export const getUserReposts = createUserListThunk(
     'posts/getUserReposts',
     'reposts',
 );
+export const getUserReplies = createUserListThunk(
+    'posts/getUserReplies',
+    'replies',
+);
+export const getUserMedia = createUserListThunk('posts/getUserMedia', 'media');
 
 // ========================================
 // 💡 TOGGLE LIKE: POST posts/{id}/like → { is_liked, likes_count }

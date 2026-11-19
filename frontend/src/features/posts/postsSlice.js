@@ -4,7 +4,9 @@ import {
     getPostById,
     getPosts,
     getReplies,
+    getUserMedia,
     getUserPosts,
+    getUserReplies,
     getUserReposts,
     loadMorePosts,
     toggleLikePost,
@@ -26,8 +28,23 @@ const initialState = {
         hasMore: true,
         isLoading: false,
     },
-    // Tab Reposts của hồ sơ đang xem (cùng cấu trúc với profile)
+    // Tab Reposts / Replies / Media của hồ sơ đang xem (cùng cấu trúc với profile).
+    // profileReplies.posts chứa comment (mỗi comment có .post = bài gốc)
     profileReposts: {
+        username: null,
+        posts: [],
+        currentPage: 0,
+        hasMore: true,
+        isLoading: false,
+    },
+    profileReplies: {
+        username: null,
+        posts: [],
+        currentPage: 0,
+        hasMore: true,
+        isLoading: false,
+    },
+    profileMedia: {
         username: null,
         posts: [],
         currentPage: 0,
@@ -109,18 +126,22 @@ const applyToggleLike = (state, postId) => {
         state.likedPostIds.splice(likeIndex, 1);
 
         // XÓA POST DATA khỏi LIKED
-        const postIndex = state.likedPosts.findIndex(
-            (p) => p.id === postId,
-        );
+        const postIndex = state.likedPosts.findIndex((p) => p.id === postId);
         if (postIndex !== -1) {
             state.likedPosts.splice(postIndex, 1);
         }
     }
 };
 
-// Tìm bài theo id ở feed hoặc trang hồ sơ (tab Threads + Reposts)
+// Tìm bài theo id ở feed hoặc trang hồ sơ (tab Threads + Reposts + Media + bài gốc tab Replies)
 const findPosts = (state, postId) =>
-    [state.posts, state.profile.posts, state.profileReposts.posts]
+    [
+        state.posts,
+        state.profile.posts,
+        state.profileReposts.posts,
+        state.profileMedia.posts,
+        state.profileReplies.posts.map((c) => c.post),
+    ]
         .map((list) => list.find((p) => p.id === postId))
         .filter(Boolean);
 
@@ -195,8 +216,9 @@ const syncInteraction = (state, post) => {
     setRepostedList(state, post, isReposted);
 };
 
-// Danh sách bài trang hồ sơ (tab Threads: profile, tab Reposts: profileReposts)
-const addProfileListCases = (builder, thunk, key) => {
+// Danh sách trang hồ sơ (tab Threads: profile, Reposts: profileReposts, Replies: profileReplies, Media: profileMedia)
+// toPost: lấy bài từ phần tử để đồng bộ like/repost (tab Replies: phần tử là comment → c.post)
+const addProfileListCases = (builder, thunk, key, toPost = (item) => item) => {
     builder
         .addCase(thunk.pending, (state, action) => {
             const list = state[key];
@@ -228,7 +250,7 @@ const addProfileListCases = (builder, thunk, key) => {
             list.hasMore = pagination.current_page < pagination.last_page;
             list.isLoading = false;
 
-            data.forEach((post) => syncInteraction(state, post));
+            data.forEach((item) => syncInteraction(state, toPost(item)));
         })
         .addCase(thunk.rejected, (state, action) => {
             const list = state[key];
@@ -434,6 +456,13 @@ export const postsSlice = createSlice({
         // ============================================
         addProfileListCases(builder, getUserPosts, 'profile');
         addProfileListCases(builder, getUserReposts, 'profileReposts');
+        addProfileListCases(
+            builder,
+            getUserReplies,
+            'profileReplies',
+            (c) => c.post,
+        );
+        addProfileListCases(builder, getUserMedia, 'profileMedia');
 
         // ============================================
         //  TOGGLE REPOST (optimistic → đồng bộ server / rollback)

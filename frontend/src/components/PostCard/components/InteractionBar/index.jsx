@@ -41,6 +41,7 @@ function InteractionBar({ postId, showMetrics }) {
                 state.posts.posts,
                 state.posts.profile.posts,
                 state.posts.profileReposts.posts,
+                state.posts.profileMedia.posts,
             ]
                 .map((list) => list.find((post) => post.id === postId))
                 .find(Boolean),

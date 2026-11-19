@@ -1,14 +1,21 @@
 import { useOutletContext } from 'react-router-dom';
 
-import EmptyMessage from '../EmptyMessage';
+import { useProfileMedia } from '@/features/posts';
+import { getUserMedia } from '@/services/posts';
+import ProfilePostList from '../ProfilePostList';
 
-// shortcut: tab Media chưa có API, luôn trống
+// Tab Media: bài của hồ sơ đang xem có ảnh (mới nhất lên đầu)
+// shortcut: ảnh trong comment chưa tính
 function Media() {
     const { profile } = useOutletContext();
-    // Hồ sơ người khác → câu trung tính thay vì "... của bạn"
+    const list = useProfileMedia();
+
     return (
-        <EmptyMessage
-            message={
+        <ProfilePostList
+            username={profile.username}
+            list={list}
+            fetchPage={getUserMedia}
+            emptyMessage={
                 profile.is_me
                     ? 'profilePage.tabs.mediaNote'
                     : 'profilePage.tabs.mediaNoteOther'

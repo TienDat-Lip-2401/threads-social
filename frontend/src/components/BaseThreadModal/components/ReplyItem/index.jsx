@@ -3,7 +3,8 @@ import { timeStamp } from '@/utils/timeStamp';
 import ModalToolbar from '../ModalToolbar';
 import ImageCarousel from '@/components/ImageCarousel';
 
-function ReplyItem({ reply }) {
+// showToolbar = false: dùng ngoài hộp trả lời (tab Replies trên hồ sơ)
+function ReplyItem({ reply, showToolbar = true }) {
     const avatarSrc = reply.user?.avatar_url || defaultAvatar;
 
     return (
@@ -40,9 +41,11 @@ function ReplyItem({ reply }) {
                 )}
 
                 {/* Toolbar icons - optional */}
-                <div className='mt-3'>
-                    <ModalToolbar />
-                </div>
+                {showToolbar && (
+                    <div className='mt-3'>
+                        <ModalToolbar />
+                    </div>
+                )}
             </div>
         </div>
     );

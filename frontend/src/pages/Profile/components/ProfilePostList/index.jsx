@@ -8,6 +8,7 @@ import PostCard from '@/components/PostCard';
 // Danh sách bài trên trang hồ sơ: tải trang 1 khi mở, cuộn tới cuối → tải trang tiếp.
 // list: { posts, currentPage, hasMore, isLoading } từ slice; fetchPage: thunk (getUserPosts / getUserReposts)
 // hideUnreposted: tab Reposts của chính mình → gỡ repost là ẩn bài ngay
+// renderItem: tự vẽ từng phần tử (tab Replies); mặc định vẽ PostCard
 function ProfilePostList({
     username,
     list,
@@ -15,6 +16,7 @@ function ProfilePostList({
     emptyMessage,
     header = null,
     hideUnreposted = false,
+    renderItem = null,
 }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
@@ -57,20 +59,24 @@ function ProfilePostList({
             {header}
 
             <div>
-                {posts.map((post) => (
-                    <PostCard
-                        key={post.id}
-                        postId={post.id}
-                        content={post.content}
-                        username={post.user.username}
-                        avatar={post.user.avatar_url}
-                        verified={post.user.verified}
-                        images={post.media_urls}
-                        timeAgo={post.created_at}
-                        quotedPostId={post.quoted_post_id}
-                        quotedPost={post.quoted_post}
-                    />
-                ))}
+                {posts.map((post) =>
+                    renderItem ? (
+                        renderItem(post)
+                    ) : (
+                        <PostCard
+                            key={post.id}
+                            postId={post.id}
+                            content={post.content}
+                            username={post.user.username}
+                            avatar={post.user.avatar_url}
+                            verified={post.user.verified}
+                            images={post.media_urls}
+                            timeAgo={post.created_at}
+                            quotedPostId={post.quoted_post_id}
+                            quotedPost={post.quoted_post}
+                        />
+                    ),
+                )}
 
                 {!isLoading && posts.length === 0 && (
                     <div className='py-6 text-center'>

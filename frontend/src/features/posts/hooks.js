@@ -12,6 +12,8 @@ import {
     selectMyPosts,
     selectProfilePosts,
     selectProfileReposts,
+    selectProfileReplies,
+    selectProfileMedia,
     selectRepostedPostIds,
     selectRepostedPosts,
 } from './postsSelector';
@@ -147,3 +149,6 @@ export const useMyPosts = () => useSelector(selectMyPosts);
 export const useProfilePosts = () => useSelector(selectProfilePosts);
 // Cùng cấu trúc, cho tab Reposts của trang hồ sơ
 export const useProfileReposts = () => useSelector(selectProfileReposts);
+// Tab Replies (phần tử là comment kèm .post) và tab Media
+export const useProfileReplies = () => useSelector(selectProfileReplies);
+export const useProfileMedia = () => useSelector(selectProfileMedia);
