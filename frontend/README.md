@@ -1,6 +1,6 @@
 # CloneThread
 
-Frontend cho bản clone Threads, viết bằng React. Backend nằm ở repo **SocialNetWork-BackEnd** (ASP.NET Core 8).
+Frontend cho bản clone Threads, viết bằng React. Backend nằm ở thư mục [`../backend`](../backend) (ASP.NET Core 8).
 
 - React 19, Vite 7, React Router 7
 - Redux Toolkit (redux-persist cho auth), axios (tự refresh token)
@@ -22,7 +22,7 @@ Frontend cho bản clone Threads, viết bằng React. Backend nằm ở repo **
 
 ## Chạy dự án
 
-Cần Node.js 20+ và backend đang chạy (xem README của backend, cách nhanh nhất là `docker compose up -d` ở repo BE).
+Cần Node.js 20+ và backend đang chạy (xem README của backend, cách nhanh nhất là `docker compose up -d` trong thư mục `backend/`).
 
 ```bash
 npm install

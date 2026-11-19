@@ -1,6 +1,6 @@
 # SocialNetWork-BackEnd (Pharse2)
 
-Backend REST API cho bản clone Threads. Frontend nằm ở repo [CloneThread](https://github.com/TienDat-Lip-2401/CloneThread).
+Backend REST API cho bản clone Threads. Frontend nằm ở thư mục [`../frontend`](../frontend).
 
 - ASP.NET Core 8 (Web API), Entity Framework Core 8, SQL Server
 - Xác thực bằng JWT (access token + refresh token), middleware tự viết
