@@ -24,11 +24,13 @@ namespace Pharse2.Models.DtoModels
         public bool IsLiked { get; set; }
         // Số trả lời trực tiếp vào bài (comment cấp 1)
         public int RepliesCount { get; set; }
-        // shortcut: chưa có tính năng repost, luôn 0
+        // shortcut: chưa có quote, chỉ đếm repost
         public int RepostsAndQuotesCount { get; set; }
+        // User đang xem đã repost bài này chưa (khách → luôn false)
+        public bool IsReposted { get; set; }
 
         // Dùng trong .Select(...) để EF đếm bằng SQL (COUNT) thay vì tải hết Comments/LikePosts.
-        // viewerId: user đang xem (0 = khách) để tính is_liked.
+        // viewerId: user đang xem (0 = khách) để tính is_liked / is_reposted.
         public static Expression<Func<Post, PostResponseDto>> Projection(int viewerId) => p => new PostResponseDto
         {
             Id = p.Id,
@@ -41,6 +43,8 @@ namespace Pharse2.Models.DtoModels
             LikesCount = p.LikePosts.Count(),
             IsLiked = p.LikePosts.Any(l => l.UserId == viewerId),
             RepliesCount = p.Comments.Count(c => c.ParentCommentId == null && !c.DeleteFlg),
+            RepostsAndQuotesCount = p.Reposts.Count(),
+            IsReposted = p.Reposts.Any(r => r.UserId == viewerId),
         };
     }
 

@@ -10,5 +10,6 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> UpdateMeAsync(UpdateProfileRequestDto dto);
         Task<ApiResponse> GetProfileAsync(string username);
         Task<ApiResponse> GetUserPostsAsync(string username, int pageNumber, int pageSize);
+        Task<ApiResponse> GetUserRepostsAsync(string username, int pageNumber, int pageSize);
     }
 }

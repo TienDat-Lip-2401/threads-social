@@ -28,6 +28,8 @@ public partial class User : EntityBaseModel
 
     public virtual ICollection<LikePost> LikePosts { get; set; } = new List<LikePost>();
 
+    public virtual ICollection<Repost> Reposts { get; set; } = new List<Repost>();
+
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public virtual ICollection<UserToken> UserTokens { get; set; } = new List<UserToken>();

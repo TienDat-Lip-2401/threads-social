@@ -27,6 +27,7 @@ namespace Pharse2
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<ILikePostService, LikePostService>();
+            services.AddScoped<IRepostService, RepostService>();
             services.AddScoped<ILikeCommentService, LikeCommentService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
@@ -39,6 +40,7 @@ namespace Pharse2
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<ILikePostRepository, LikePostRepository>();
+            services.AddScoped<IRepostRepository, RepostRepository>();
             services.AddScoped<ILikeCommentRepository, LikeCommentRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IUserRepository, UserRepository>();

@@ -15,8 +15,10 @@ namespace Pharse2.Controllers
         private readonly ICommonService _commonService;
         private readonly ICommentService _commentService;
         private readonly ILikePostService _likePostService;
-        public PostsController(IPostService postService, ICommonService commonService, ICommentService commentService, ILikePostService likePostService)
+        private readonly IRepostService _repostService;
+        public PostsController(IPostService postService, ICommonService commonService, ICommentService commentService, ILikePostService likePostService, IRepostService repostService)
         {
+            _repostService = repostService;
             _likePostService = likePostService;
             _postService = postService;
             _commonService = commonService;
@@ -90,6 +92,13 @@ namespace Pharse2.Controllers
         public async Task<IActionResult> ToggleLike(int id)
         {
             var response = await _likePostService.ToggleLikePostAsync(id);
+            return StatusCode(response.StatusCode, response);
+        }
+        // FE: POST posts/{id}/repost → bật/tắt repost, trả { is_reposted, reposts_and_quotes_count }
+        [HttpPost("{id:int}/repost")]
+        public async Task<IActionResult> ToggleRepost(int id)
+        {
+            var response = await _repostService.ToggleRepostAsync(id);
             return StatusCode(response.StatusCode, response);
         }
         // FE: GET posts/{id}/comments?page=1&per_page=10

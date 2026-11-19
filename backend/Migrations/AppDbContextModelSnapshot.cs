@@ -157,6 +157,24 @@ namespace Pharse2.Migrations
                     b.ToTable("RefreshToken");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.EntityModels.Repost", b =>
+                {
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PostId", "UserId");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("Repost", (string)null);
+                });
+
             modelBuilder.Entity("Pharse2.Models.EntityModels.UserToken", b =>
                 {
                     b.Property<int>("Id")
@@ -414,6 +432,25 @@ namespace Pharse2.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.EntityModels.Repost", b =>
+                {
+                    b.HasOne("Pharse2.Models.Post", "Post")
+                        .WithMany("Reposts")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pharse2.Models.User", "User")
+                        .WithMany("Reposts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Pharse2.Models.EntityModels.UserToken", b =>
                 {
                     b.HasOne("Pharse2.Models.User", "User")
@@ -470,6 +507,8 @@ namespace Pharse2.Migrations
                     b.Navigation("LikePosts");
 
                     b.Navigation("Media");
+
+                    b.Navigation("Reposts");
                 });
 
             modelBuilder.Entity("Pharse2.Models.User", b =>
@@ -483,6 +522,8 @@ namespace Pharse2.Migrations
                     b.Navigation("Posts");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Reposts");
 
                     b.Navigation("UserTokens");
                 });

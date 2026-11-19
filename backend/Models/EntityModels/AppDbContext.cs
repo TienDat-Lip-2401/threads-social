@@ -31,6 +31,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<UserToken> UserTokens { get; set; }
 
+    public virtual DbSet<Repost> Reposts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Comment>(entity =>
@@ -160,6 +162,26 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserTokens)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Repost>(entity =>
+        {
+            entity.HasKey(e => new { e.PostId, e.UserId });
+
+            entity.ToTable("Repost");
+
+            // Tab Reposts trên hồ sơ: lọc theo user, sắp theo thời gian repost
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
+
+            // Xóa bài → DB tự xóa các repost của bài
+            entity.HasOne(d => d.Post).WithMany(p => p.Reposts)
+                .HasForeignKey(d => d.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Giống LikePost: không tự xóa theo User (tránh nhiều đường cascade)
+            entity.HasOne(d => d.User).WithMany(p => p.Reposts)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         OnModelCreatingPartial(modelBuilder);

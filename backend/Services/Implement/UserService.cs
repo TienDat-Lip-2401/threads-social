@@ -1,5 +1,6 @@
 ﻿using Pharse2.Models;
 using Pharse2.Models.CommonModels;
+using Pharse2.Models.DtoModels;
 using Pharse2.Models.DtoModels.User;
 using Pharse2.Repositories.Interfaces;
 using Pharse2.Services.Interfaces;
@@ -120,7 +121,16 @@ namespace Pharse2.Services.Implement
         }
 
         // FE: GET users/{username}/posts?page=&per_page= → { data: [...], pagination: {...} }
-        public async Task<ApiResponse> GetUserPostsAsync(string username, int pageNumber, int pageSize)
+        public Task<ApiResponse> GetUserPostsAsync(string username, int pageNumber, int pageSize) =>
+            GetUserPagedPostsAsync(username, pageNumber, pageSize, _postRepository.GetUserPostsAsync);
+
+        // FE: GET users/{username}/reposts?page=&per_page= → bài user đã repost
+        public Task<ApiResponse> GetUserRepostsAsync(string username, int pageNumber, int pageSize) =>
+            GetUserPagedPostsAsync(username, pageNumber, pageSize, _postRepository.GetUserRepostsAsync);
+
+        // Dùng chung cho tab Threads / Reposts: tìm user theo username, chuẩn hóa phân trang, đổi URL ảnh
+        private async Task<ApiResponse> GetUserPagedPostsAsync(string username, int pageNumber, int pageSize,
+            Func<int, int, int, int, Task<PagedResult<PostResponseDto>>> query)
         {
             var user = await _userRepository.GetByUsernameAsync(username);
             if (user == null || user.DeleteFlg)
@@ -129,7 +139,7 @@ namespace Pharse2.Services.Implement
             }
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50);
-            var page = await _postRepository.GetUserPostsAsync(user.Id, pageNumber, pageSize, _commonService.GetUserId());
+            var page = await query(user.Id, pageNumber, pageSize, _commonService.GetUserId());
             page.Items.ForEach(p => p.WithPublicUrls(_mediaStorage));
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");
         }

@@ -88,6 +88,17 @@ namespace Pharse2.Repositories.Implement
                 .ToPageResultAsync(pageNumber, pageSize);
         }
 
+        // Tab Reposts: bài user đã repost, repost mới nhất lên đầu (bỏ bài đã xóa)
+        public async Task<PagedResult<PostResponseDto>> GetUserRepostsAsync(int userId, int pageNumber, int pageSize, int viewerId)
+        {
+            return await _context.Reposts
+                .Where(r => r.UserId == userId && !r.Post.DeleteFlg)
+                .OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.PostId)
+                .Select(r => r.Post)
+                .Select(PostResponseDto.Projection(viewerId))
+                .ToPageResultAsync(pageNumber, pageSize);
+        }
+
         public async Task<int> CountByUserAsync(int userId)
         {
             return await _context.Posts.CountAsync(p => p.UserId == userId && !p.DeleteFlg);

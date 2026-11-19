@@ -31,5 +31,14 @@ namespace Pharse2.Controllers
             var response = await _userService.GetUserPostsAsync(username, page, perPage);
             return StatusCode(response.StatusCode, response);
         }
+
+        // FE: GET users/{username}/reposts?page=1&per_page=10
+        [HttpGet("{username}/reposts")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetUserReposts(string username, [FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10)
+        {
+            var response = await _userService.GetUserRepostsAsync(username, page, perPage);
+            return StatusCode(response.StatusCode, response);
+        }
     }
 }
