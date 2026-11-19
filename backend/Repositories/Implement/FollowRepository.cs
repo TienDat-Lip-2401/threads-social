@@ -53,7 +53,7 @@ namespace Pharse2.Repositories.Implement
                 .Where(f => f.FolloweeId == userId && !f.Follower.DeleteFlg)
                 .OrderByDescending(f => f.CreatedAt)
                 .Take(take)
-                .Select(f => new PostUserDto { Id = f.Follower.Id, Username = f.Follower.Username, Name = f.Follower.Name, AvatarUrl = f.Follower.AvatarPath })
+                .Select(f => new PostUserDto { Id = f.Follower.Id, Username = f.Follower.Username, Name = f.Follower.Name, AvatarUrl = f.Follower.AvatarPath, Verified = f.Follower.IsVerified })
                 .ToListAsync();
         }
 
@@ -83,6 +83,7 @@ namespace Pharse2.Repositories.Implement
             Username = u.Username,
             Name = u.Name,
             AvatarUrl = u.AvatarPath,
+            Verified = u.IsVerified,
             IsFollowing = u.Followers.Any(f => f.FollowerId == viewerId),
             IsMe = u.Id == viewerId,
         };

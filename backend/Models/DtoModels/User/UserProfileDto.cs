@@ -8,7 +8,7 @@
         public string? Name { get; set; }
         public string? Bio { get; set; }
         public string? AvatarUrl { get; set; }
-        // shortcut: chưa có tích xanh, luôn false
+        // Tích xanh (User.IsVerified)
         public bool Verified { get; set; }
         public int PostsCount { get; set; }
         public int FollowersCount { get; set; }

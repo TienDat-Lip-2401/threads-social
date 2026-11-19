@@ -143,7 +143,7 @@ namespace Pharse2.Repositories.Implement
                     {
                         r.PostId,
                         r.CreatedAt,
-                        User = new PostUserDto { Id = r.User.Id, Username = r.User.Username, Name = r.User.Name, AvatarUrl = r.User.AvatarPath },
+                        User = new PostUserDto { Id = r.User.Id, Username = r.User.Username, Name = r.User.Name, AvatarUrl = r.User.AvatarPath, Verified = r.User.IsVerified },
                     })
                     .ToListAsync())
                 .GroupBy(r => r.PostId)

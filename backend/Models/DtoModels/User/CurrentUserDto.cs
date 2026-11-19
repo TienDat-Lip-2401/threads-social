@@ -6,6 +6,9 @@
         public string? Name { get; set; }
         public string? Bio { get; set; }
         public string? AvatarUrl { get; set; }
+        public bool Verified { get; set; }
+        // "User" | "Admin" → FE ẩn/hiện chức năng quản trị (sau này)
+        public string Role { get; set; } = "User";
 
         private DateTime? _emailVerifiedAt;
         // Kind=Utc để JSON có hậu tố "Z"

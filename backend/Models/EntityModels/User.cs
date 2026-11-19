@@ -22,6 +22,9 @@ public partial class User : EntityBaseModel
     public string? Bio { get; set; }
     public string? AvatarPath { get; set; }
 
+    // Tích xanh: chỉ admin cấp / gỡ (PUT admin/users/{username}/verified)
+    public bool IsVerified { get; set; }
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<LikeComment> LikeComments { get; set; } = new List<LikeComment>();

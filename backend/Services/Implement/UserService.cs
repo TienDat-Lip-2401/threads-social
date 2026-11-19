@@ -50,6 +50,8 @@ namespace Pharse2.Services.Implement
             Name = user.Name,
             Bio = user.Bio,
             AvatarUrl = _mediaStorage.ToPublicUrl(user.AvatarPath),
+            Verified = user.IsVerified,
+            Role = user.Role,
         };
 
         // FE: PUT auth/user (multipart: name, bio, avatar)
@@ -126,6 +128,7 @@ namespace Pharse2.Services.Implement
                 AvatarUrl = _mediaStorage.ToPublicUrl(user.AvatarPath),
                 PostsCount = await _postRepository.CountByUserAsync(user.Id),
                 IsMe = user.Id == viewerId,
+                Verified = user.IsVerified,
                 FollowersCount = await _followRepository.CountFollowersAsync(user.Id),
                 FollowingCount = await _followRepository.CountFollowingAsync(user.Id),
                 IsFollowing = viewerId != 0 && await _followRepository.ExistsAsync(viewerId, user.Id),
@@ -239,6 +242,21 @@ namespace Pharse2.Services.Implement
             var page = await query(user.Id, pageNumber, pageSize, _commonService.GetUserId());
             page.Items.ForEach(u => u.AvatarUrl = _mediaStorage.ToPublicUrl(u.AvatarUrl));
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");
+        }
+
+        // Admin: PUT admin/users/{username}/verified { verified } → cấp / gỡ tích xanh
+        public async Task<ApiResponse> SetVerifiedAsync(string username, bool verified)
+        {
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null || user.DeleteFlg)
+            {
+                return ApiResponse.Response(404, "Không tìm thấy người dùng.");
+            }
+            user.IsVerified = verified;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.SaveChangesAsync();
+            return ApiResponse.Response(200, verified ? "Đã cấp tích xanh" : "Đã gỡ tích xanh",
+                new { user.Username, Verified = user.IsVerified });
         }
 
         private static (int, int) NormalizePage(int pageNumber, int pageSize) =>

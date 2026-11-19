@@ -51,6 +51,7 @@ namespace Pharse2.Models.DtoModels
             User = new PostUserDto
             {
                 Id = p.User.Id, Username = p.User.Username, Name = p.User.Name, AvatarUrl = p.User.AvatarPath,
+                Verified = p.User.IsVerified,
                 IsFollowing = p.User.Followers.Any(f => f.FollowerId == viewerId),
             },
             MediaUrls = p.Media.Where(m => m.CommentId == null && !m.DeleteFlg)
@@ -67,7 +68,7 @@ namespace Pharse2.Models.DtoModels
                     Id = p.QuotedPost.Id,
                     Content = p.QuotedPost.Content,
                     CreatedAt = p.QuotedPost.CreatedAt,
-                    User = new PostUserDto { Id = p.QuotedPost.User.Id, Username = p.QuotedPost.User.Username, Name = p.QuotedPost.User.Name, AvatarUrl = p.QuotedPost.User.AvatarPath },
+                    User = new PostUserDto { Id = p.QuotedPost.User.Id, Username = p.QuotedPost.User.Username, Name = p.QuotedPost.User.Name, AvatarUrl = p.QuotedPost.User.AvatarPath, Verified = p.QuotedPost.User.IsVerified },
                     MediaUrls = p.QuotedPost.Media.Where(m => m.CommentId == null && !m.DeleteFlg)
                         .OrderBy(m => m.SortOrder).Select(m => m.Path).ToList(),
                     LikesCount = p.QuotedPost.LikePosts.Count(),
@@ -102,7 +103,7 @@ namespace Pharse2.Models.DtoModels
         public string? Name { get; set; }
         // Projection lấy đường dẫn tương đối; service đổi thành URL đầy đủ (null → FE dùng avatar mặc định)
         public string? AvatarUrl { get; set; }
-        // shortcut: chưa có tích xanh, luôn false
+        // Tích xanh (User.IsVerified)
         public bool Verified { get; set; }
         // Người đang xem có theo dõi tác giả không → FE ẩn dấu + trên avatar.
         // Chỉ điền ở danh sách bài (PostResponseDto.User); nơi khác luôn false.
