@@ -166,6 +166,11 @@
         "copy": "Copy link"
     },
 
+    "repostedLabel": {
+        "other": "reposted",
+        "me": "You reposted"
+    },
+
     "quotedPost": {
         "unavailable": "This post is no longer available",
         "isQuote": "Quoted a post"

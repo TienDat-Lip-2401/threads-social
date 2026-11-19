@@ -61,6 +61,7 @@ function Posts({ posts, hasMore }) {
                             timeAgo={post.created_at}
                             quotedPostId={post.quoted_post_id}
                             quotedPost={post.quoted_post}
+                            repostedBy={post.reposted_by}
                         />
                     ))}
                 </InfiniteScroll>

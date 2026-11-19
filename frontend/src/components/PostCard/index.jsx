@@ -8,6 +8,7 @@ import PostHeader from './components/PostHeader';
 import ImageCarousel from '../ImageCarousel';
 import PostDropdown from './components/PostDropdown';
 import QuotedPostCard from '../QuotedPostCard';
+import RepostedLabel from './components/RepostedLabel';
 
 // const images = [
 //     'https://hips.hearstapps.com/hmg-prod/images/gettyimages-1144982182.jpg',
@@ -29,6 +30,7 @@ function PostCard({
     showMetrics = true,
     quotedPostId = null, // Quote: có id nhưng quotedPost = null → bài gốc đã bị xóa
     quotedPost = null,
+    repostedBy = null, // Feed: người repost gần nhất → hiện "X đã đăng lại"
 }) {
     return (
         <div
@@ -38,6 +40,10 @@ function PostCard({
                     'border-b border-gray-300 pt-4 pb-2.5 dark:border-gray-500/20',
             )}
         >
+            {repostedBy && !isForCapture && (
+                <RepostedLabel postId={postId} repostedBy={repostedBy} />
+            )}
+
             <div
                 className={cn(
                     'flex items-start justify-between gap-3 p-2',

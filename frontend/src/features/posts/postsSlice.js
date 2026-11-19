@@ -387,8 +387,13 @@ export const postsSlice = createSlice({
 
                 const { data, pagination } = action.payload;
 
-                // APPEND new posts (không replace)
-                state.posts = [...state.posts, ...data];
+                // APPEND new posts (không replace). Repost làm bài nhảy lên đầu
+                // → trang sau có thể trả lại bài đã có → bỏ trùng theo id
+                const loadedIds = new Set(state.posts.map((p) => p.id));
+                state.posts = [
+                    ...state.posts,
+                    ...data.filter((p) => !loadedIds.has(p.id)),
+                ];
                 state.currentPage = pagination.current_page;
                 state.hasMore = pagination.current_page < pagination.last_page;
 
