@@ -12,5 +12,7 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> RevokeAllSessionsAsync();
         Task<ApiResponse> ForgotPasswordAsync(ForgotPasswordRequestDto dto);
         Task<ApiResponse> ResetPasswordAsync(ResetPasswordRequestDto dto);
+        Task<ApiResponse> VerifyEmailAsync(VerifyEmailRequestDto dto);
+        Task<ApiResponse> ResendVerificationEmailAsync(ResendVerificationEmailRequestDto dto);
     }
 }

@@ -59,6 +59,20 @@ namespace Pharse2.Controllers
             var response = await _authService.ResetPasswordAsync(dto);
             return StatusCode(response.StatusCode, response);
         }
+        [HttpPost("verify-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmail(VerifyEmailRequestDto dto)
+        {
+            var response = await _authService.VerifyEmailAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
+        [HttpPost("resend-verification-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResendVerificationEmail(ResendVerificationEmailRequestDto dto)
+        {
+            var response = await _authService.ResendVerificationEmailAsync(dto);
+            return StatusCode(response.StatusCode, response);
+        }
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

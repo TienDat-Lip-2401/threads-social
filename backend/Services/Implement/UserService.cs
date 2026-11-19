@@ -20,11 +20,12 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(404, "Tài khoản không tồn tại hoặc đã bị khóa.");
             }
-            var result = new UserResponseDto
+            var result = new CurrentUserDto
             {
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
+                EmailVerifiedAt = user.EmailVerifiedAt,
             };
             return ApiResponse.Response(200, "Thành công", result);
         }

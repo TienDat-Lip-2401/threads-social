@@ -14,6 +14,9 @@ public partial class User : EntityBaseModel
     public string Password { get; set; } = null!;
     public string Role { get; set; } = "User";
 
+    // null = chưa xác thực email → không cho đăng nhập
+    public DateTime? EmailVerifiedAt { get; set; }
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<LikeComment> LikeComments { get; set; } = new List<LikeComment>();

@@ -26,6 +26,7 @@ namespace Pharse2.Services.Implement
         private const string PasswordRegex = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
         private const string PasswordRuleMessage = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&)!";
         private static readonly TimeSpan ResetTokenLifetime = TimeSpan.FromMinutes(30);
+        private static readonly TimeSpan VerifyTokenLifetime = TimeSpan.FromHours(24);
         private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);
 
         public AuthService(
@@ -58,6 +59,11 @@ namespace Pharse2.Services.Implement
             {
                 _logger.LogWarning("Đăng nhập thất bại: Sai thông tin cho {Login} | IP: {IP}", dto.Login, ipAddress);
                 return ApiResponse.Response(400, "Sai tên đăng nhập hoặc mật khẩu!");
+            }
+            if (user.EmailVerifiedAt == null)
+            {
+                _logger.LogInformation("Đăng nhập bị chặn: User {UserId} chưa xác thực email", user.Id);
+                return ApiResponse.Response(403, "Email chưa được xác thực. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác thực.");
             }
             //Mở bất đồng bộ
             using var transaction = await _userRepository.BeginTransactionAsync();
@@ -218,7 +224,8 @@ namespace Pharse2.Services.Implement
             };
             await _userRepository.CreateAsync(user);
             await _userRepository.SaveChangesAsync();
-            return ApiResponse.Response(201, "Đăng ký thành công!");
+            await SendVerificationEmailAsync(user);
+            return ApiResponse.Response(201, "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.");
 
         }
 
@@ -238,44 +245,94 @@ namespace Pharse2.Services.Implement
                 return ApiResponse.Response(200, message);
             }
 
-            // Chặn bấm gửi liên tục: 60 giây mới gửi lại 1 email
-            var latest = await _userTokenRepository.GetLatestAsync(user.Id, UserToken.ResetPassword);
+            await SendTokenEmailAsync(user, UserToken.ResetPassword, ResetTokenLifetime, "reset-password",
+                "Đặt lại mật khẩu Threads",
+                link => $"<p>Bấm vào link dưới đây để đặt lại mật khẩu (hết hạn sau {ResetTokenLifetime.TotalMinutes} phút):</p>" +
+                        $"<p><a href=\"{link}\">{link}</a></p>" +
+                        "<p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>");
+            return ApiResponse.Response(200, message);
+        }
+
+        // FE: POST auth/verify-email { token }
+        public async Task<ApiResponse> VerifyEmailAsync(VerifyEmailRequestDto dto)
+        {
+            var token = string.IsNullOrWhiteSpace(dto.Token) ? null
+                : await _userTokenRepository.GetValidAsync(_tokenService.ComputeSha256Hash(dto.Token), UserToken.VerifyEmail);
+            if (token == null || token.User.DeleteFlg)
+            {
+                return ApiResponse.Response(400, "Link xác thực không hợp lệ hoặc đã hết hạn!");
+            }
+            var now = DateTime.UtcNow;
+            token.User.EmailVerifiedAt ??= now;
+            token.User.UpdatedAt = now;
+            token.UsedAt = now;
+            token.UpdatedAt = now;
+            await _userTokenRepository.SaveChangesAsync();
+            await _userTokenRepository.InvalidateAllAsync(token.UserId, UserToken.VerifyEmail);
+            return ApiResponse.Response(200, "Xác thực email thành công! Bạn có thể đăng nhập.");
+        }
+
+        // FE: POST auth/resend-verification-email { email } (không cần đăng nhập)
+        // Luôn trả 200 để không lộ email nào đã đăng ký / đã xác thực.
+        public async Task<ApiResponse> ResendVerificationEmailAsync(ResendVerificationEmailRequestDto dto)
+        {
+            const string message = "Nếu email đã đăng ký và chưa xác thực, chúng tôi đã gửi lại link xác thực. Vui lòng kiểm tra hộp thư!";
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                return ApiResponse.ValidationError(new() { ["email"] = ["Vui lòng nhập email!"] });
+            }
+            var user = await _userRepository.GetByEmailAsync(dto.Email.Trim());
+            if (user != null && !user.DeleteFlg && user.EmailVerifiedAt == null)
+            {
+                await SendVerificationEmailAsync(user);
+            }
+            return ApiResponse.Response(200, message);
+        }
+
+        private Task SendVerificationEmailAsync(User user) =>
+            SendTokenEmailAsync(user, UserToken.VerifyEmail, VerifyTokenLifetime, "verify-email",
+                "Xác thực email Threads",
+                link => $"<p>Cảm ơn bạn đã đăng ký Threads. Bấm vào link dưới đây để xác thực email (hết hạn sau {VerifyTokenLifetime.TotalHours} giờ):</p>" +
+                        $"<p><a href=\"{link}\">{link}</a></p>" +
+                        "<p>Nếu bạn không đăng ký, hãy bỏ qua email này.</p>");
+
+        // Tạo token dùng 1 lần (lưu hash), vô hiệu link cũ cùng loại, gửi email chứa link {FrontendBaseUrl}/{path}?token=...
+        // Trong 60 giây chỉ gửi 1 email/loại để tránh spam. Lỗi gửi email chỉ ghi log (không lộ ra ngoài).
+        private async Task SendTokenEmailAsync(User user, string type, TimeSpan lifetime, string path,
+            string subject, Func<string, string> buildBody)
+        {
+            var latest = await _userTokenRepository.GetLatestAsync(user.Id, type);
             if (latest != null && latest.CreatedAt > DateTime.UtcNow - ResendCooldown)
             {
-                return ApiResponse.Response(200, message);
+                return;
             }
 
-            // Token mới thay thế các link cũ
-            await _userTokenRepository.InvalidateAllAsync(user.Id, UserToken.ResetPassword);
+            await _userTokenRepository.InvalidateAllAsync(user.Id, type);
             var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
             var now = DateTime.UtcNow;
             await _userTokenRepository.CreateAsync(new UserToken
             {
                 UserId = user.Id,
-                Type = UserToken.ResetPassword,
+                Type = type,
                 TokenHash = _tokenService.ComputeSha256Hash(rawToken),
-                ExpiresAt = now + ResetTokenLifetime,
+                ExpiresAt = now + lifetime,
                 CreatedAt = now,
                 UpdatedAt = now
             });
             await _userTokenRepository.SaveChangesAsync();
 
+            // Link luôn dựng từ cấu hình, không tin header từ client (tránh link giả mạo)
             var frontendBaseUrl = (_configuration["App:FrontendBaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
-            var link = $"{frontendBaseUrl}/reset-password?token={rawToken}";
+            var link = $"{frontendBaseUrl}/{path}?token={rawToken}";
             try
             {
-                await _emailSender.SendAsync(user.Email, "Đặt lại mật khẩu Threads",
-                    $"<p>Xin chào <b>{WebUtility.HtmlEncode(user.Username)}</b>,</p>" +
-                    $"<p>Bấm vào link dưới đây để đặt lại mật khẩu (hết hạn sau {ResetTokenLifetime.TotalMinutes} phút):</p>" +
-                    $"<p><a href=\"{link}\">{link}</a></p>" +
-                    "<p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>");
+                await _emailSender.SendAsync(user.Email, subject,
+                    $"<p>Xin chào <b>{WebUtility.HtmlEncode(user.Username)}</b>,</p>" + buildBody(link));
             }
             catch (Exception ex)
             {
-                // Không báo lỗi ra ngoài (tránh lộ email tồn tại); ghi log để kiểm tra cấu hình SMTP
-                _logger.LogError(ex, "Gửi email đặt lại mật khẩu thất bại cho User ID: {UserId}", user.Id);
+                _logger.LogError(ex, "Gửi email {Type} thất bại cho User ID: {UserId}", type, user.Id);
             }
-            return ApiResponse.Response(200, message);
         }
 
         // FE: POST auth/reset-password { token, email, password, password_confirmation }
@@ -304,6 +361,7 @@ namespace Pharse2.Services.Implement
             {
                 var now = DateTime.UtcNow;
                 token.User.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                token.User.EmailVerifiedAt ??= now; // bấm được link trong email = đã sở hữu email
                 token.User.UpdatedAt = now;
                 token.UsedAt = now;
                 token.UpdatedAt = now;
