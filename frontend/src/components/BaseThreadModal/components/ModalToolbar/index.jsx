@@ -33,7 +33,7 @@ function ModalToolbar({ onImagesSelect }) {
             <input
                 ref={fileInputRef}
                 type='file'
-                accept='image/*, video/*'
+                accept='image/*'
                 multiple
                 onChange={handleFileChange}
                 className='hidden'
