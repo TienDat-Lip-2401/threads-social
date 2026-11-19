@@ -34,7 +34,9 @@ function InteractionBar({ postId, showMetrics }) {
 
     // Lấy full post data từ Redux store
     const post = useSelector(
-        (state) => state.posts.posts.find((post) => post.id === postId),
+        (state) =>
+            state.posts.posts.find((post) => post.id === postId) ||
+            state.posts.profile.posts.find((post) => post.id === postId),
         shallowEqual,
     );
 

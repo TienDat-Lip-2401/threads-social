@@ -10,6 +10,7 @@ import {
     selectLikedPostIds,
     selectLikedPosts,
     selectMyPosts,
+    selectProfilePosts,
     selectRepostedPostIds,
     selectRepostedPosts,
 } from './postsSelector';
@@ -141,3 +142,5 @@ export const useIsFetchingMore = () => useSelector(selectIsFetchingMore);
 export const useInitialLoading = () => useSelector(selectIsInitialLoading);
 
 export const useMyPosts = () => useSelector(selectMyPosts);
+// { username, posts, currentPage, hasMore, isLoading } của trang hồ sơ
+export const useProfilePosts = () => useSelector(selectProfilePosts);

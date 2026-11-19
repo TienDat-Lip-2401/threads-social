@@ -4,6 +4,7 @@ import {
     getPostById,
     getPosts,
     getReplies,
+    getUserPosts,
     loadMorePosts,
     toggleLikePost,
 } from '@/services/posts';
@@ -14,6 +15,14 @@ const initialState = {
     posts: [],
     replies: {
         // Cấu trúc: { [postId]: { data: [], currentPage: 1, hasMore: true, isLoading: false } }
+    },
+    // Bài của trang hồ sơ đang xem (tách riêng khỏi feed)
+    profile: {
+        username: null,
+        posts: [],
+        currentPage: 0,
+        hasMore: true,
+        isLoading: false,
     },
     currentPage: 1,
     hasMore: true,
@@ -98,6 +107,12 @@ const applyToggleLike = (state, postId) => {
         }
     }
 };
+
+// Tìm bài theo id ở feed hoặc trang hồ sơ
+const findPosts = (state, postId) =>
+    [state.posts, state.profile.posts]
+        .map((list) => list.find((p) => p.id === postId))
+        .filter(Boolean);
 
 // Thêm/bỏ post khỏi danh sách đã like (likedPostIds + likedPosts)
 const setLikedList = (state, post, isLiked) => {
@@ -412,6 +427,49 @@ export const postsSlice = createSlice({
             });
 
         // ============================================
+        //  GET USER POSTS (trang hồ sơ)
+        // ============================================
+        builder
+            .addCase(getUserPosts.pending, (state, action) => {
+                const { username, page = 1 } = action.meta.arg;
+                if (page === 1) {
+                    // Đổi sang hồ sơ khác → xóa bài của hồ sơ cũ
+                    if (state.profile.username !== username) {
+                        state.profile.posts = [];
+                        state.profile.currentPage = 0;
+                    }
+                    state.profile.username = username;
+                    state.profile.hasMore = true;
+                }
+                state.profile.isLoading = true;
+            })
+            .addCase(getUserPosts.fulfilled, (state, action) => {
+                // Bỏ response trễ của hồ sơ trước đó
+                if (action.meta.arg.username !== state.profile.username) return;
+
+                const { data, pagination } = action.payload;
+                if (pagination.current_page === 1) {
+                    state.profile.posts = data;
+                } else {
+                    const ids = new Set(state.profile.posts.map((p) => p.id));
+                    state.profile.posts.push(
+                        ...data.filter((p) => !ids.has(p.id)),
+                    );
+                }
+                state.profile.currentPage = pagination.current_page;
+                state.profile.hasMore =
+                    pagination.current_page < pagination.last_page;
+                state.profile.isLoading = false;
+
+                data.forEach((post) => syncInteraction(state, post));
+            })
+            .addCase(getUserPosts.rejected, (state, action) => {
+                if (action.meta.arg.username !== state.profile.username) return;
+                state.profile.isLoading = false;
+                state.profile.hasMore = false;
+            });
+
+        // ============================================
         //  TOGGLE LIKE (optimistic → đồng bộ server / rollback)
         // ============================================
         builder
@@ -426,7 +484,7 @@ export const postsSlice = createSlice({
                     interaction.likeCount = likes_count;
                 }
                 const post =
-                    state.posts.find((p) => p.id === postId) ||
+                    findPosts(state, postId)[0] ||
                     state.likedPosts.find((p) => p.id === postId);
                 if (post) setLikedList(state, post, is_liked);
             })
@@ -456,6 +514,14 @@ export const postsSlice = createSlice({
                 // Build interaction cho post mới
                 syncInteraction(state, newPost);
 
+                // Đang ở trang hồ sơ của chính mình → hiện bài mới ở đầu
+                if (
+                    state.profile.username?.toLowerCase() ===
+                    newPost.user?.username?.toLowerCase()
+                ) {
+                    state.profile.posts.unshift(newPost);
+                }
+
                 // Clear error nếu có
                 state.error = null;
             })
@@ -475,15 +541,13 @@ export const postsSlice = createSlice({
             .addCase(createReply.fulfilled, (state, action) => {
                 state.isCreatingReply = false;
 
-                // Tìm parent post và update reply count
-                const parentPost = state.posts.find(
-                    (post) => post.id === action.payload.parent_id,
+                // Tìm parent post (feed + trang hồ sơ) và update reply count
+                findPosts(state, action.payload.parent_id).forEach(
+                    (parentPost) => {
+                        parentPost.replies_count =
+                            (parentPost.replies_count || 0) + 1;
+                    },
                 );
-
-                if (parentPost) {
-                    parentPost.replies_count =
-                        (parentPost.replies_count || 0) + 1;
-                }
             })
             .addCase(createReply.rejected, (state, action) => {
                 state.isCreatingReply = false;

@@ -19,8 +19,8 @@ function NavigationTabs() {
             <ul className='flex justify-around'>
                 <li className='flex-1'>
                     <NavLink
-                        to={ROUTES.PROFILE}
-                        end // Chỉ active khi exact /profile
+                        to='.' // hồ sơ đang xem: /profile hoặc /profile/:username
+                        end // Chỉ active khi đúng trang hồ sơ (không phải tab con)
                         className={({ isActive }) =>
                             cn(
                                 TAB_BASE_CLASSES,

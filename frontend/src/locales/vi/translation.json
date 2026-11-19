@@ -204,6 +204,22 @@
     "profilePage": {
         "profile": "Trang cá nhân",
         "editProfile": "Chỉnh sửa trang cá nhân",
+        "notFound": "Không tìm thấy người dùng này.",
+        "loadError": "Không tải được trang cá nhân. Vui lòng thử lại.",
+        "loginRequired": "Đăng nhập để xem trang cá nhân của bạn.",
+        "editModal": {
+            "title": "Chỉnh sửa trang cá nhân",
+            "changeAvatar": "Đổi ảnh đại diện",
+            "name": "Tên",
+            "namePlaceholder": "Tên hiển thị",
+            "bio": "Tiểu sử",
+            "bioPlaceholder": "Giới thiệu về bạn",
+            "cancel": "Hủy",
+            "save": "Lưu",
+            "saving": "Đang lưu...",
+            "success": "Đã cập nhật trang cá nhân!",
+            "error": "Cập nhật thất bại. Vui lòng thử lại."
+        },
         "followers": "người theo dõi",
 
         "tabs": {

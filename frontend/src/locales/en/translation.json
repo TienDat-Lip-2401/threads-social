@@ -204,6 +204,22 @@
     "profilePage": {
         "profile": "Profile",
         "editProfile": "Edit Profile",
+        "notFound": "This user could not be found.",
+        "loadError": "Could not load the profile. Please try again.",
+        "loginRequired": "Log in to see your profile.",
+        "editModal": {
+            "title": "Edit profile",
+            "changeAvatar": "Change avatar",
+            "name": "Name",
+            "namePlaceholder": "Display name",
+            "bio": "Bio",
+            "bioPlaceholder": "Tell people about yourself",
+            "cancel": "Cancel",
+            "save": "Save",
+            "saving": "Saving...",
+            "success": "Profile updated!",
+            "error": "Update failed. Please try again."
+        },
         "follower": "Follower",
         "followers": "followers",
 

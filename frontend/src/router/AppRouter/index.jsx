@@ -34,12 +34,15 @@ function AppRouter() {
                 <Route element={<DefaultLayout />}>
                     <Route path={ROUTES.HOME} element={<Home />} />
 
-                    <Route path={ROUTES.PROFILE} element={<Profile />}>
-                        <Route index element={<Threads />} />
-                        <Route path={ROUTES.REPLIES} element={<Replies />} />
-                        <Route path={ROUTES.MEDIA} element={<Media />} />
-                        <Route path={ROUTES.REPOSTS} element={<Reposts />} />
-                    </Route>
+                    {/* /profile = hồ sơ của mình, /profile/:username = hồ sơ người khác */}
+                    {[ROUTES.PROFILE, ROUTES.PROFILE_USER].map((path) => (
+                        <Route key={path} path={path} element={<Profile />}>
+                            <Route index element={<Threads />} />
+                            <Route path={ROUTES.REPLIES} element={<Replies />} />
+                            <Route path={ROUTES.MEDIA} element={<Media />} />
+                            <Route path={ROUTES.REPOSTS} element={<Reposts />} />
+                        </Route>
+                    ))}
                 </Route>
 
                 <Route element={<EmbedLayout />}>

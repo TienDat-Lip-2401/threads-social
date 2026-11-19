@@ -1,10 +1,17 @@
+import { Link } from 'react-router-dom';
 import { timeStamp } from '@/utils/timeStamp';
 import verifiedIcon from '@/assets/icons/verified-icon.svg';
 
 function PostHeader({ username, timeAgo, verified = false }) {
     return (
         <div className='flex items-center gap-2'>
-            <span className='text-xs font-medium'>{username}</span>
+            <Link
+                to={`/profile/${encodeURIComponent(username)}`}
+                onClick={(e) => e.stopPropagation()}
+                className='text-xs font-medium hover:underline'
+            >
+                {username}
+            </Link>
 
             {verified && (
                 <span>

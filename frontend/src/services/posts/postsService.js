@@ -209,6 +209,27 @@ export const getReplies = createAsyncThunk(
 );
 
 // ========================================
+// 💡 GET POSTS CỦA 1 USER (trang hồ sơ, có phân trang)
+// ========================================
+export const getUserPosts = createAsyncThunk(
+    'posts/getUserPosts',
+    async ({ username, page = 1, perPage = 10 }, { rejectWithValue }) => {
+        try {
+            const response = await http.get(
+                `users/${encodeURIComponent(username)}/posts`,
+                { params: { page, per_page: perPage } },
+            );
+            return response; // { data, pagination }
+        } catch (error) {
+            return rejectWithValue({
+                message: error.response?.data?.message || error.message,
+                status: error.response?.status,
+            });
+        }
+    },
+);
+
+// ========================================
 // 💡 TOGGLE LIKE: POST posts/{id}/like → { is_liked, likes_count }
 // UI đổi ngay ở toggleLikePost.pending, đồng bộ server ở fulfilled, rollback ở rejected (postsSlice)
 // ========================================

@@ -1,6 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 
 export const selectAllPosts = (state) => state.posts.posts;
+export const selectProfilePosts = (state) => state.posts.profile;
 
 export const selectIsInitialLoading = (state) => state.posts.isInitialLoading;
 
