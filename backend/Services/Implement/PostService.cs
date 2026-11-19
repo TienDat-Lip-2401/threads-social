@@ -33,12 +33,21 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.ValidationError(mediaErrors);
             }
+            if (dto.QuotedPostId.HasValue)
+            {
+                var quoted = await _postRepository.GetByIdAsync(dto.QuotedPostId.Value);
+                if (quoted == null || quoted.DeleteFlg)
+                {
+                    return ApiResponse.ValidationError(new() { ["quoted_post_id"] = ["Bài viết được trích dẫn không tồn tại!"] });
+                }
+            }
             var paths = dto.Media is { Count: > 0 } ? await _mediaStorage.SaveAsync(dto.Media) : new List<string>();
             var now = DateTime.UtcNow;
             var newPost = new Post
             {
                 UserId = _commonService.GetUserId(),
                 Content = dto.Content.Trim(),
+                QuotedPostId = dto.QuotedPostId,
                 CreatedAt = now,
                 UpdatedAt = now, // không gán thì EF ghi 0001-01-01
                 Media = paths.Select((path, i) => new Media { Path = path, SortOrder = i, CreatedAt = now, UpdatedAt = now }).ToList()
@@ -66,7 +75,7 @@ namespace Pharse2.Services.Implement
         public async Task<ApiResponse> DeletePostAsync(int id)
         {
             var post = await _postRepository.GetByIdAsync(id);
-            if (post == null) return ApiResponse.Response(404, "Post not found");
+            if (post == null || post.DeleteFlg) return ApiResponse.Response(404, "Post not found");
             int currentUserId = _commonService.GetUserId();
             if (post.UserId != currentUserId)
             {

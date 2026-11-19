@@ -32,9 +32,10 @@ namespace Pharse2.Repositories.Implement
             return await _context.Reposts.AnyAsync(r => r.UserId == userId && r.PostId == postId);
         }
 
-        public async Task<int> CountAsync(int postId)
+        public async Task<int> CountRepostsAndQuotesAsync(int postId)
         {
-            return await _context.Reposts.CountAsync(r => r.PostId == postId);
+            return await _context.Reposts.CountAsync(r => r.PostId == postId)
+                + await _context.Posts.CountAsync(p => p.QuotedPostId == postId && !p.DeleteFlg);
         }
 
         public async Task<bool> SaveChangesAsync()

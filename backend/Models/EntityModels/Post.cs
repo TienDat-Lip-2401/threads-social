@@ -11,6 +11,14 @@ public partial class Post : EntityBaseModel
 
     public string Content { get; set; } = null!;
 
+    // Quote: bài này trích dẫn bài nào (null = bài thường)
+    public int? QuotedPostId { get; set; }
+
+    public virtual Post? QuotedPost { get; set; }
+
+    // Các bài quote lại bài này
+    public virtual ICollection<Post> Quotes { get; set; } = new List<Post>();
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<LikePost> LikePosts { get; set; } = new List<LikePost>();

@@ -24,10 +24,15 @@ namespace Pharse2.Models.DtoModels
         public bool IsLiked { get; set; }
         // Số trả lời trực tiếp vào bài (comment cấp 1)
         public int RepliesCount { get; set; }
-        // shortcut: chưa có quote, chỉ đếm repost
+        // Số repost + số bài quote (chưa xóa) trỏ tới bài này
         public int RepostsAndQuotesCount { get; set; }
         // User đang xem đã repost bài này chưa (khách → luôn false)
         public bool IsReposted { get; set; }
+
+        // Quote: id bài được trích dẫn. Có id nhưng QuotedPost = null → bài gốc đã bị xóa
+        public int? QuotedPostId { get; set; }
+        // Bài được trích dẫn (chỉ 1 tầng, không lồng tiếp)
+        public QuotedPostDto? QuotedPost { get; set; }
 
         // Dùng trong .Select(...) để EF đếm bằng SQL (COUNT) thay vì tải hết Comments/LikePosts.
         // viewerId: user đang xem (0 = khách) để tính is_liked / is_reposted.
@@ -43,9 +48,41 @@ namespace Pharse2.Models.DtoModels
             LikesCount = p.LikePosts.Count(),
             IsLiked = p.LikePosts.Any(l => l.UserId == viewerId),
             RepliesCount = p.Comments.Count(c => c.ParentCommentId == null && !c.DeleteFlg),
-            RepostsAndQuotesCount = p.Reposts.Count(),
+            RepostsAndQuotesCount = p.Reposts.Count() + p.Quotes.Count(q => !q.DeleteFlg),
             IsReposted = p.Reposts.Any(r => r.UserId == viewerId),
+            QuotedPostId = p.QuotedPostId,
+            QuotedPost = p.QuotedPost != null && !p.QuotedPost.DeleteFlg
+                ? new QuotedPostDto
+                {
+                    Id = p.QuotedPost.Id,
+                    Content = p.QuotedPost.Content,
+                    CreatedAt = p.QuotedPost.CreatedAt,
+                    User = new PostUserDto { Id = p.QuotedPost.User.Id, Username = p.QuotedPost.User.Username, Name = p.QuotedPost.User.Name, AvatarUrl = p.QuotedPost.User.AvatarPath },
+                    MediaUrls = p.QuotedPost.Media.Where(m => m.CommentId == null && !m.DeleteFlg)
+                        .OrderBy(m => m.SortOrder).Select(m => m.Path).ToList(),
+                    LikesCount = p.QuotedPost.LikePosts.Count(),
+                    RepliesCount = p.QuotedPost.Comments.Count(c => c.ParentCommentId == null && !c.DeleteFlg),
+                    RepostsAndQuotesCount = p.QuotedPost.Reposts.Count() + p.QuotedPost.Quotes.Count(q => !q.DeleteFlg),
+                    IsQuote = p.QuotedPost.QuotedPostId != null,
+                }
+                : null,
         };
+    }
+
+    // Thẻ nhúng của bài quote: nội dung + số liệu (chỉ xem) của bài gốc
+    public class QuotedPostDto
+    {
+        public int Id { get; set; }
+        public string Content { get; set; } = null!;
+        private DateTime _createdAt;
+        public DateTime CreatedAt { get => _createdAt; set => _createdAt = DateTime.SpecifyKind(value, DateTimeKind.Utc); }
+        public PostUserDto User { get; set; } = null!;
+        public List<string> MediaUrls { get; set; } = new();
+        public int LikesCount { get; set; }
+        public int RepliesCount { get; set; }
+        public int RepostsAndQuotesCount { get; set; }
+        // Bài gốc này lại là 1 quote → FE chỉ ghi chú, không lồng tiếp
+        public bool IsQuote { get; set; }
     }
 
     public class PostUserDto

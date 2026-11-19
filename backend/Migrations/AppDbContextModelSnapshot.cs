@@ -281,6 +281,9 @@ namespace Pharse2.Migrations
                     b.Property<bool>("DeleteFlg")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("QuotedPostId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -289,6 +292,8 @@ namespace Pharse2.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK__Post__3214EC07229E9D19");
+
+                    b.HasIndex("QuotedPostId");
 
                     b.HasIndex("UserId");
 
@@ -482,11 +487,18 @@ namespace Pharse2.Migrations
 
             modelBuilder.Entity("Pharse2.Models.Post", b =>
                 {
+                    b.HasOne("Pharse2.Models.Post", "QuotedPost")
+                        .WithMany("Quotes")
+                        .HasForeignKey("QuotedPostId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Pharse2.Models.User", "User")
                         .WithMany("Posts")
                         .HasForeignKey("UserId")
                         .IsRequired()
                         .HasConstraintName("FK_Post_User");
+
+                    b.Navigation("QuotedPost");
 
                     b.Navigation("User");
                 });
@@ -507,6 +519,8 @@ namespace Pharse2.Migrations
                     b.Navigation("LikePosts");
 
                     b.Navigation("Media");
+
+                    b.Navigation("Quotes");
 
                     b.Navigation("Reposts");
                 });

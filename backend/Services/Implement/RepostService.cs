@@ -54,7 +54,7 @@ namespace Pharse2.Services.Implement
             var result = new
             {
                 IsReposted = await _repostRepository.ExistsAsync(currentUserId, postId),
-                RepostsAndQuotesCount = await _repostRepository.CountAsync(postId)
+                RepostsAndQuotesCount = await _repostRepository.CountRepostsAndQuotesAsync(postId)
             };
             return ApiResponse.Response(200, result.IsReposted ? "Post reposted successfully" : "Repost removed successfully", result);
         }

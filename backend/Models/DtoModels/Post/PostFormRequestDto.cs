@@ -9,5 +9,9 @@ namespace Pharse2.Models.DtoModels
 
         [FromForm(Name = "media[]")]
         public List<IFormFile>? Media { get; set; }
+
+        // Quote: id bài được trích dẫn (không gửi = bài thường)
+        [FromForm(Name = "quoted_post_id")]
+        public int? QuotedPostId { get; set; }
     }
 }

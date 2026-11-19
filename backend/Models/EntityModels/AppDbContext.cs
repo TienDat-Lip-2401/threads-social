@@ -109,6 +109,12 @@ public partial class AppDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
 
+            // Quote: SQL Server không cho FK tự tham chiếu dùng cascade/set null → NoAction.
+            // Bài bị xóa mềm (DeleteFlg) nên bài quote vẫn giữ QuotedPostId để FE hiện "không còn tồn tại".
+            entity.HasOne(d => d.QuotedPost).WithMany(p => p.Quotes)
+                .HasForeignKey(d => d.QuotedPostId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             entity.HasOne(d => d.User).WithMany(p => p.Posts)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)

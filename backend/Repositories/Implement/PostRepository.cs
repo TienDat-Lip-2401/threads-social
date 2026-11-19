@@ -20,13 +20,15 @@ namespace Pharse2.Repositories.Implement
             await _context.Posts.AddAsync(post);
         }
 
-        // DB cascade xóa luôn comment + Media của bài
-        // shortcut: file ảnh trên ổ đĩa chưa bị xóa theo
+        // Xóa mềm (DeleteFlg = true): bài biến mất ở mọi nơi vì các truy vấn đều lọc !DeleteFlg,
+        // nhưng bài quote vẫn biết mình trích dẫn bài nào (hiện "Bài viết không còn tồn tại").
+        // shortcut: comment/like/repost/ảnh của bài đã xóa vẫn nằm trong DB (bị ẩn)
         public async Task<bool> DeleteByIdAsync(int id)
         {
+            var now = DateTime.UtcNow;
             int deleted = await _context.Posts
-                .Where(p => p.Id == id)
-                .ExecuteDeleteAsync();
+                .Where(p => p.Id == id && !p.DeleteFlg)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.DeleteFlg, true).SetProperty(p => p.UpdatedAt, now));
             return deleted > 0;
         }
 
