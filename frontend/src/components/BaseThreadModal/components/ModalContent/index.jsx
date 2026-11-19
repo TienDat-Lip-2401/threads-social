@@ -21,12 +21,10 @@ function ModalContent({
     const currentUser = useCurrentUser();
     const avatarSrc = currentUser?.avatar_url || defaultAvatar;
 
-    // State để track topic
-    const [selectedTopic, setSelectedTopic] = useState(null);
-    const [isTopicOpen, setIsTopicOpen] = useState(false);
+    // TODO: Topic selector chưa làm → luôn chưa chọn topic (thêm setter khi làm TopicSelectorModal)
+    const [selectedTopic] = useState(null);
 
     const handleContentChange = (e) => onContentChange(e.target.value);
-    const handleTopicClick = () => setIsTopicOpen(true);
 
     return (
         <div className='flex-1 px-6 pt-3'>
@@ -58,7 +56,6 @@ function ModalContent({
                                         size={18}
                                     />
                                     <button
-                                        onClick={handleTopicClick}
                                         className='text-base font-medium text-black outline-none hover:underline md:text-sm dark:text-gray-400'
                                     >
                                         {selectedTopic.name}

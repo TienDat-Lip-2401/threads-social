@@ -14,7 +14,11 @@ function Reposts() {
             username={profile.username}
             list={list}
             fetchPage={getUserReposts}
-            emptyMessage='profilePage.tabs.repostsNote'
+            emptyMessage={
+                profile.is_me
+                    ? 'profilePage.tabs.repostsNote'
+                    : 'profilePage.tabs.repostsNoteOther'
+            }
             hideUnreposted={profile.is_me}
         />
     );

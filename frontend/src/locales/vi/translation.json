@@ -234,12 +234,15 @@
 
             "replies": "Phản hồi",
             "repliesNote": "Phản hồi của bạn sẽ hiển thị tại đây",
+            "repliesNoteOther": "Chưa có phản hồi nào",
 
             "media": "Đa phương tiện",
             "mediaNote": "Hình ảnh & video của bạn sẽ hiển thị tại đây",
+            "mediaNoteOther": "Chưa có hình ảnh hoặc video nào",
 
             "reposts": "Chia sẻ lại",
-            "repostsNote": "Bài đăng lại của bạn sẽ hiển thị tại đây"
+            "repostsNote": "Bài đăng lại của bạn sẽ hiển thị tại đây",
+            "repostsNoteOther": "Chưa có bài đăng lại nào"
         }
     }
 }

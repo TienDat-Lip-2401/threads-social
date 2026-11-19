@@ -235,12 +235,15 @@
 
             "replies": "Replies",
             "repliesNote": "Your replies will appear here",
+            "repliesNoteOther": "No replies yet",
 
             "media": "Media",
             "mediaNote": "Your media will appear here",
+            "mediaNoteOther": "No media yet",
 
             "reposts": "Reposts",
-            "repostsNote": "Your reposts will appear here"
+            "repostsNote": "Your reposts will appear here",
+            "repostsNoteOther": "No reposts yet"
         }
     }
 }
