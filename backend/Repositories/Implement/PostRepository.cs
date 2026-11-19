@@ -57,15 +57,6 @@ namespace Pharse2.Repositories.Implement
             return post;
         }
 
-        public async Task<IEnumerable<Comment>> GetCommentsPostByIdAsync(int id)
-        {
-            var comments = await _context.Comments
-                .Include(c => c.User)
-                .Where(c => c.PostId == id)
-                .ToListAsync();
-            return comments;
-        }
-
         public async Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId)
         {
             return await _context.Posts

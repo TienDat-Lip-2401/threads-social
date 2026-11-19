@@ -36,15 +36,7 @@ namespace Pharse2.Controllers
         public async Task<IActionResult> CreateComment(CommentRequestDto dto)
         {
             var response = await _commentService.CreateCommentAsync(dto);
-            if (response.StatusCode == 400)
-            {
-                return BadRequest(response);
-            }
-            if (response.StatusCode == 500)
-            {
-                return StatusCode(500, response);
-            }
-            return CreatedAtAction(nameof(GetCommentById), new { id = response.Data }, response);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpDelete]
         [Route("{id}")]

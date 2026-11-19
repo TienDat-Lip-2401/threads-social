@@ -11,10 +11,56 @@ namespace Pharse2.Services.Implement
     {
         private readonly ICommentRepository _commentRepository;
         private readonly ICommonService _commonService;
-        public CommentService(ICommentRepository commentRepository, ICommonService commonService)
+        private readonly IPostRepository _postRepository;
+        public CommentService(ICommentRepository commentRepository, ICommonService commonService, IPostRepository postRepository)
         {
             _commentRepository = commentRepository;
             _commonService = commonService;
+            _postRepository = postRepository;
+        }
+
+        // FE: POST posts/{id}/comments (multipart: content, media[])
+        public async Task<ApiResponse> CreatePostCommentAsync(int postId, string? content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return ApiResponse.ValidationError(new() { ["content"] = ["Nội dung không được để trống!"] });
+            }
+            var post = await _postRepository.GetByIdAsync(postId);
+            if (post == null || post.DeleteFlg)
+            {
+                return ApiResponse.Response(404, "Post not found");
+            }
+            var now = DateTime.UtcNow;
+            var newComment = new Comment
+            {
+                UserId = _commonService.GetUserId(),
+                PostId = postId,
+                Content = content.Trim(),
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            await _commentRepository.CreateAsync(newComment);
+            if (!await _commentRepository.SaveChangesAsync())
+            {
+                return ApiResponse.Response(500, "Failed to create comment");
+            }
+            var created = await _commentRepository.GetCommentDtoByIdAsync(newComment.Id);
+            return ApiResponse.Response(201, "Comment created successfully", created);
+        }
+
+        // FE: GET posts/{id}/comments?page=&per_page= → { data: [...], pagination: {...} }
+        public async Task<ApiResponse> GetPostCommentsAsync(int postId, int pageNumber, int pageSize)
+        {
+            var post = await _postRepository.GetByIdAsync(postId);
+            if (post == null || post.DeleteFlg)
+            {
+                return ApiResponse.Response(404, "Post not found");
+            }
+            pageNumber = Math.Max(1, pageNumber);
+            pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50);
+            var page = await _commentRepository.GetPostCommentsAsync(postId, pageNumber, pageSize);
+            return ApiResponse.Paged(page, "Comments retrieved successfully");
         }
         public async Task<ApiResponse> CreateCommentAsync(CommentRequestDto dto)
         {
@@ -43,6 +89,8 @@ namespace Pharse2.Services.Implement
                 PostId = dto.PostId,
                 Content = dto.Content,
                 ParentCommentId = dto.ParentCommentId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
             await _commentRepository.CreateAsync(newComment);
             var isSave = await _commentRepository.SaveChangesAsync();
@@ -50,16 +98,7 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(500, "Failed to create comment");
             }
-            var resultDto = new CommentResponseDto
-            {
-                Id = newComment.Id,
-                UserId = newComment.UserId,
-                Username = newComment.User.Username,
-                Content = newComment.Content,
-                CreatedAt = newComment.CreatedAt,
-                PostId = newComment.PostId,
-                ParentCommentId = newComment.ParentCommentId
-            };
+            var resultDto = await _commentRepository.GetCommentDtoByIdAsync(newComment.Id);
             return ApiResponse.Response(201, "Comment created successfully", resultDto);
         }
 

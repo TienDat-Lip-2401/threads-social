@@ -34,7 +34,7 @@ namespace Pharse2.Models.DtoModels
             UpdatedAt = p.UpdatedAt,
             User = new PostUserDto { Id = p.User.Id, Username = p.User.Username },
             LikesCount = p.LikePosts.Count(),
-            RepliesCount = p.Comments.Count(c => c.ParentCommentId == null),
+            RepliesCount = p.Comments.Count(c => c.ParentCommentId == null && !c.DeleteFlg),
         };
     }
 

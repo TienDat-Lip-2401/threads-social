@@ -12,5 +12,7 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> DeleteCommentAsync(int id);
         Task<ApiResponse> GetCommentRepliesByIdAsync(int id);
         Task<ApiResponse> GetLikesCommentByIdAsync(int id);
+        Task<ApiResponse> CreatePostCommentAsync(int postId, string? content);
+        Task<ApiResponse> GetPostCommentsAsync(int postId, int pageNumber, int pageSize);
     }
 }

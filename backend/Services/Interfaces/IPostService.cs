@@ -10,7 +10,6 @@ namespace Pharse2.Services.Interfaces
         Task<ApiResponse> DeletePostAsync(int id);
         Task<ApiResponse> UpdatePostAsync(int id, PostRequestDto dto);
         Task<ApiResponse> GetUsersLikePostAsync(int id);
-        Task<ApiResponse> GetCommentsPostAsync(int id);
         Task<ApiResponse> GetPostsByUserIdAsync(int userId);
         Task<ApiResponse> GetFeedAsync(int pageNumber, int pageSize);
     }

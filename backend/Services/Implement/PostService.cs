@@ -1,7 +1,6 @@
 ﻿using Pharse2.Models;
 using Pharse2.Models.CommonModels;
 using Pharse2.Models.DtoModels;
-using Pharse2.Models.DtoModels.Comment;
 using Pharse2.Models.DtoModels.User;
 using Pharse2.Repositories.Interfaces;
 using Pharse2.Services.Interfaces;
@@ -123,27 +122,6 @@ namespace Pharse2.Services.Implement
             }).ToList();
             return ApiResponse.Response(200, "Users who liked the post retrieved successfully", userList);
 
-        }
-
-        public async Task<ApiResponse> GetCommentsPostAsync(int id)
-        {
-            var comments = await _postRepository.GetCommentsPostByIdAsync(id);
-            if(comments == null)
-            {
-                return ApiResponse.Response(404, "Post not found");
-            }
-            var result = comments.Select(c => new CommentResponseDto
-            {
-                Id = c.Id,
-                UserId = c.UserId,
-                Username = c.User.Username,
-                Content = c.Content,
-                CreatedAt = c.CreatedAt,
-                UpdatedAt = c.UpdatedAt,
-                
-                
-            }).ToList();
-            return ApiResponse.Response(200, "Comments retrieved successfully", result);
         }
 
         public async Task<ApiResponse> GetPostsByUserIdAsync(int userId)

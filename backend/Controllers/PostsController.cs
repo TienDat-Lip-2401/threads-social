@@ -12,10 +12,12 @@ namespace Pharse2.Controllers
     {
         private readonly IPostService _postService;
         private readonly ICommonService _commonService;
-        public PostsController(IPostService postService, ICommonService commonService)
+        private readonly ICommentService _commentService;
+        public PostsController(IPostService postService, ICommonService commonService, ICommentService commentService)
         {
             _postService = postService;
             _commonService = commonService;
+            _commentService = commentService;
 
         }
         
@@ -80,14 +82,21 @@ namespace Pharse2.Controllers
             if (response.StatusCode == 404) return NotFound(response);
             return Ok(response);
         }
-        [HttpGet]
-        [Route("{id}/comments")]
+        // FE: GET posts/{id}/comments?page=1&per_page=10
+        [HttpGet("{id:int}/comments")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetCommentsPost(int id)
+        public async Task<IActionResult> GetPostComments(int id, [FromQuery] int page = 1, [FromQuery(Name = "per_page")] int perPage = 10)
         {
-            var response = await _postService.GetCommentsPostAsync(id);
-            if (response.StatusCode == 404) return NotFound(response);
-            return Ok(response);
+            var response = await _commentService.GetPostCommentsAsync(id, page, perPage);
+            return StatusCode(response.StatusCode, response);
+        }
+        // FE gửi multipart/form-data: content + media[] + reply_permission
+        // shortcut: media[] và reply_permission chưa được lưu (Bước 6 xử lý ảnh)
+        [HttpPost("{id:int}/comments")]
+        public async Task<IActionResult> CreatePostComment(int id, [FromForm] PostRequestDto dto)
+        {
+            var response = await _commentService.CreatePostCommentAsync(id, dto.Content);
+            return StatusCode(response.StatusCode, response);
         }
         [HttpGet]
         [Route("user/{userId}")]

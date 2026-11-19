@@ -1,4 +1,6 @@
 ﻿using Pharse2.Models;
+using Pharse2.Models.CommonModels;
+using Pharse2.Models.DtoModels.Comment;
 using Pharse2.Models.EntityModels;
 
 namespace Pharse2.Repositories.Interfaces
@@ -13,5 +15,7 @@ namespace Pharse2.Repositories.Interfaces
         Task<bool> SaveChangesAsync();
         Task<IEnumerable<Comment>> GetCommentRepliesById(int id);
         Task<IEnumerable<LikeComment>> GetLikesCommentById(int id);
+        Task<PagedResult<PostCommentDto>> GetPostCommentsAsync(int postId, int pageNumber, int pageSize);
+        Task<PostCommentDto?> GetCommentDtoByIdAsync(int id);
     }
 }

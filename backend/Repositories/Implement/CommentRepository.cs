@@ -1,6 +1,9 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
+using Pharse2.Helper;
 using Pharse2.Models;
+using Pharse2.Models.CommonModels;
+using Pharse2.Models.DtoModels.Comment;
 using Pharse2.Models.EntityModels;
 using Pharse2.Repositories.Interfaces;
 
@@ -61,6 +64,24 @@ namespace Pharse2.Repositories.Implement
                 .Include(lc => lc.User)
                 .ToListAsync();
             return likes;
+        }
+
+        // Comment cấp 1 của bài viết, cũ nhất lên trước (đọc như cuộc hội thoại)
+        public async Task<PagedResult<PostCommentDto>> GetPostCommentsAsync(int postId, int pageNumber, int pageSize)
+        {
+            return await _context.Comments
+                .Where(c => c.PostId == postId && c.ParentCommentId == null && !c.DeleteFlg)
+                .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+                .Select(PostCommentDto.Projection)
+                .ToPageResultAsync(pageNumber, pageSize);
+        }
+
+        public async Task<PostCommentDto?> GetCommentDtoByIdAsync(int id)
+        {
+            return await _context.Comments
+                .Where(c => c.Id == id && !c.DeleteFlg)
+                .Select(PostCommentDto.Projection)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<bool> SaveChangesAsync()
