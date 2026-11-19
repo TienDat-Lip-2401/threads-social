@@ -5,6 +5,7 @@ import loveIcon from '@/assets/icons/love-icon.svg';
 import commentIcon from '@/assets/icons/comment-icon.svg';
 import repostIcon from '@/assets/icons/repost-icon.svg';
 import { timeStamp } from '@/utils/timeStamp';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 // Thẻ nhúng bài được trích dẫn (Quote). Chỉ 1 tầng, số liệu chỉ để xem.
 // post = null → bài gốc đã bị xóa. showStats = false khi xem trước trong hộp đăng bài.
@@ -41,6 +42,7 @@ function QuotedPostCard({ post, showStats = true }) {
                 <span className='text-xs font-medium'>
                     {post.user?.username}
                 </span>
+                <VerifiedBadge verified={post.user?.verified} />
                 <span className='text-xs font-light text-gray-400'>
                     {timeStamp(post.created_at)}
                 </span>

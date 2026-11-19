@@ -2,6 +2,7 @@ import defaultAvatar from '@/assets/images/default-avatar.jpeg';
 import { timeStamp } from '@/utils/timeStamp';
 import ModalToolbar from '../ModalToolbar';
 import ImageCarousel from '@/components/ImageCarousel';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 // showToolbar = false: dùng ngoài hộp trả lời (tab Replies trên hồ sơ)
 function ReplyItem({ reply, showToolbar = true }) {
@@ -25,6 +26,7 @@ function ReplyItem({ reply, showToolbar = true }) {
                     <span className='text-base font-medium md:text-sm dark:text-white'>
                         {reply.user?.username || 'Unknown'}
                     </span>
+                    <VerifiedBadge verified={reply.user?.verified} />
                     <span className='text-base text-gray-400 md:text-sm dark:text-gray-500'>
                         {timeStamp(reply.created_at) || 0}
                     </span>

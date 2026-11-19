@@ -4,6 +4,7 @@ import defaultAvatar from '@/assets/images/default-avatar.jpeg';
 import { useCurrentUser } from '@/features/auth';
 import { useFollowState, useToggleFollow } from '@/features/follows';
 import { cn } from '@/lib/utils';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 // 1 dòng: avatar + username/tên (bấm → mở hồ sơ) + nút Theo dõi
 // shortcut: khách không có nút theo dõi trong modal (thay vì mở hộp mời đăng nhập)
@@ -27,8 +28,11 @@ function FollowUserRow({ user, onOpenUser }) {
                     className='h-9 w-9 shrink-0 rounded-full object-cover'
                 />
                 <span className='min-w-0'>
-                    <span className='block truncate text-sm font-medium hover:underline'>
-                        {user.username}
+                    <span className='flex items-center gap-1 text-sm font-medium'>
+                        <span className='truncate hover:underline'>
+                            {user.username}
+                        </span>
+                        <VerifiedBadge verified={user.verified} />
                     </span>
                     {user.name && (
                         <span className='block truncate text-sm text-gray-500'>
