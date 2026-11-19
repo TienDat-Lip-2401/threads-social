@@ -1,5 +1,5 @@
-﻿using Pharse2.Models.CommonModels;
-using Pharse2.Models.DtoModels.LikePost;
+﻿using Microsoft.EntityFrameworkCore;
+using Pharse2.Models.CommonModels;
 using Pharse2.Models.DtoModels.User;
 using Pharse2.Models.EntityModels;
 using Pharse2.Repositories.Interfaces;
@@ -18,14 +18,6 @@ namespace Pharse2.Services.Implement
             _postRepository = postRepository;
             _commonService = commonService;
         }
-        // Check if user liked a post
-        public async Task<ApiResponse> CheckUserLikePost(LikePostRequestDto dto)
-        {
-            var currentUserId = _commonService.GetUserId();
-            var likePost = await _likePostRepository.GetLikePost(currentUserId, dto.postId);
-            var result = likePost != null;
-            return ApiResponse.Response(200, "Check like post successfully", result);
-        }
         // Get list of users who liked a post
         public async Task<ApiResponse> GetLikersByPostIdAsync(int postId)
         {
@@ -38,40 +30,44 @@ namespace Pharse2.Services.Implement
             }).ToList();
             return ApiResponse.Response(200, "Get likers successfully", result);
         }
-        // Toggle like/unlike post
-        public async Task<ApiResponse> ToggleLikePostAsync(LikePostRequestDto dto)
+        // FE: POST posts/{id}/like → like nếu chưa like, bỏ like nếu đã like
+        // Trả { is_liked, likes_count } để FE đồng bộ lại số liệu thật
+        public async Task<ApiResponse> ToggleLikePostAsync(int postId)
         {
-            var post  = await _postRepository.GetByIdAsync(dto.postId);
-            if(post == null)
+            var post = await _postRepository.GetByIdAsync(postId);
+            if (post == null || post.DeleteFlg)
             {
                 return ApiResponse.Response(404, "Post not found");
             }
-            var currrentUserId = _commonService.GetUserId();
-            
-            var existingLike = await _likePostRepository.GetLikePost(currrentUserId, dto.postId);
+            var currentUserId = _commonService.GetUserId();
+            var existingLike = await _likePostRepository.GetLikePost(currentUserId, postId);
             if (existingLike != null)
             {
                 _likePostRepository.RemoveLike(existingLike);
-                var isSave = await _likePostRepository.SaveChangesAsync();
-                if(!isSave)
+            }
+            else
+            {
+                await _likePostRepository.AddLikeAsync(new LikePost
                 {
-                    return ApiResponse.Response(500, "Failed to unlike the post");
-                }
-                return ApiResponse.Response(200, "Post unliked successfully");
+                    UserId = currentUserId,
+                    PostId = postId,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
-            var newLikePost = new LikePost
+            try
             {
-                UserId = currrentUserId,
-                PostId = dto.postId,
-                CreatedAt = DateTime.UtcNow
+                await _likePostRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // 2 request cùng lúc (bấm liên tục): request kia đã thêm/xóa trước → trả trạng thái hiện tại
+            }
+            var result = new
+            {
+                IsLiked = await _likePostRepository.IsLikePost(currentUserId, postId),
+                LikesCount = await _likePostRepository.GetLikeCountAsync(postId)
             };
-            await _likePostRepository.AddLikeAsync(newLikePost);
-            var isLiked = await _likePostRepository.SaveChangesAsync();
-            if(!isLiked)
-            {
-                return ApiResponse.Response(500, "Failed to like the post");
-            }
-            return ApiResponse.Response(200, "Post liked successfully");
+            return ApiResponse.Response(200, result.IsLiked ? "Post liked successfully" : "Post unliked successfully", result);
         }
     }
 }

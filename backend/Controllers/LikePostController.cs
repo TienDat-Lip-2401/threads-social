@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Pharse2.Models.DtoModels.LikePost;
 using Pharse2.Repositories.Interfaces;
 using Pharse2.Services.Interfaces;
 
@@ -19,13 +18,6 @@ namespace Pharse2.Controllers
             _postService = postService;
             _commonService = commonService;
         }
-        [HttpPost]
-        [Route("ToggleLike")]
-        public async Task<IActionResult> ToggleLike(LikePostRequestDto dto)
-        {
-            var result = await _likePostService.ToggleLikePostAsync(dto);
-            return Ok(result);
-        }
         [HttpGet]
         [Route("likes/{postId}")]
         [AllowAnonymous]
@@ -33,13 +25,6 @@ namespace Pharse2.Controllers
         {
             var count = await _likePostService.GetLikersByPostIdAsync(postId);
             return Ok(count);
-        }
-        [HttpGet]
-        [Route("check")]
-        public async Task<IActionResult> CheckUserLikePost(LikePostRequestDto dto)
-        {
-            var result = await _likePostService.CheckUserLikePost(dto);
-            return Ok(result);
         }
     }
 }

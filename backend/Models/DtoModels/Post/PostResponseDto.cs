@@ -20,13 +20,16 @@ namespace Pharse2.Models.DtoModels
         // shortcut: chưa có bảng media, luôn rỗng; Bước 6 (upload ảnh) sẽ điền
         public List<string> MediaUrls { get; set; } = new();
         public int LikesCount { get; set; }
+        // User đang xem đã like bài này chưa (khách → luôn false)
+        public bool IsLiked { get; set; }
         // Số trả lời trực tiếp vào bài (comment cấp 1)
         public int RepliesCount { get; set; }
         // shortcut: chưa có tính năng repost, luôn 0
         public int RepostsAndQuotesCount { get; set; }
 
-        // Dùng trong .Select(...) để EF đếm bằng SQL (COUNT) thay vì tải hết Comments/LikePosts
-        public static readonly Expression<Func<Post, PostResponseDto>> Projection = p => new PostResponseDto
+        // Dùng trong .Select(...) để EF đếm bằng SQL (COUNT) thay vì tải hết Comments/LikePosts.
+        // viewerId: user đang xem (0 = khách) để tính is_liked.
+        public static Expression<Func<Post, PostResponseDto>> Projection(int viewerId) => p => new PostResponseDto
         {
             Id = p.Id,
             Content = p.Content,
@@ -34,6 +37,7 @@ namespace Pharse2.Models.DtoModels
             UpdatedAt = p.UpdatedAt,
             User = new PostUserDto { Id = p.User.Id, Username = p.User.Username },
             LikesCount = p.LikePosts.Count(),
+            IsLiked = p.LikePosts.Any(l => l.UserId == viewerId),
             RepliesCount = p.Comments.Count(c => c.ParentCommentId == null && !c.DeleteFlg),
         };
     }

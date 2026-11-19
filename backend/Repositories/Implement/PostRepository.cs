@@ -57,30 +57,30 @@ namespace Pharse2.Repositories.Implement
             return post;
         }
 
-        public async Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId)
+        public async Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId, int viewerId)
         {
             return await _context.Posts
                 .Where(p => p.UserId == userId && !p.DeleteFlg)
                 .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
-                .Select(PostResponseDto.Projection)
+                .Select(PostResponseDto.Projection(viewerId))
                 .ToListAsync();
         }
 
         // Feed: bài mới nhất lên đầu
-        public async Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize)
+        public async Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize, int viewerId)
         {
             return await _context.Posts
                 .Where(p => !p.DeleteFlg)
                 .OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Id)
-                .Select(PostResponseDto.Projection)
+                .Select(PostResponseDto.Projection(viewerId))
                 .ToPageResultAsync(pageNumber, pageSize);
         }
 
-        public async Task<PostResponseDto?> GetPostDtoByIdAsync(int id)
+        public async Task<PostResponseDto?> GetPostDtoByIdAsync(int id, int viewerId)
         {
             return await _context.Posts
                 .Where(p => p.Id == id && !p.DeleteFlg)
-                .Select(PostResponseDto.Projection)
+                .Select(PostResponseDto.Projection(viewerId))
                 .FirstOrDefaultAsync();
         }
     }

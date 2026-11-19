@@ -41,7 +41,7 @@ namespace Pharse2.Services.Implement
                 return ApiResponse.Response(500, "Failed to create post");
             }
             // FE thêm bài mới lên đầu feed nên cần nguyên object bài viết (user, counts...)
-            var created = await _postRepository.GetPostDtoByIdAsync(newPost.Id);
+            var created = await _postRepository.GetPostDtoByIdAsync(newPost.Id, _commonService.GetUserId());
             return ApiResponse.Response(201, "Post created successfully", created);
         }
 
@@ -66,7 +66,7 @@ namespace Pharse2.Services.Implement
 
         public async Task<ApiResponse> GetPostByIdAsync(int id)
         {
-            var post = await _postRepository.GetPostDtoByIdAsync(id);
+            var post = await _postRepository.GetPostDtoByIdAsync(id, _commonService.GetUserId());
             if(post == null)
             {
                 return ApiResponse.Response(404, "Post not found");
@@ -126,7 +126,7 @@ namespace Pharse2.Services.Implement
 
         public async Task<ApiResponse> GetPostsByUserIdAsync(int userId)
         {
-            var posts = await _postRepository.GetPostsByUserIdAsync(userId);
+            var posts = await _postRepository.GetPostsByUserIdAsync(userId, _commonService.GetUserId());
             if(posts.Count == 0)
             {
                 return ApiResponse.Response(404, "This user has no posts yet or does not exist.");
@@ -139,7 +139,7 @@ namespace Pharse2.Services.Implement
         {
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50); // chặn per_page quá lớn
-            var page = await _postRepository.GetFeedAsync(pageNumber, pageSize);
+            var page = await _postRepository.GetFeedAsync(pageNumber, pageSize, _commonService.GetUserId());
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");
         }
     }

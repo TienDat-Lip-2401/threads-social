@@ -12,8 +12,8 @@ namespace Pharse2.Repositories.Interfaces
         Task<bool> DeleteByIdAsync(int id); // Xóa tối ưu theo ID
         Task<bool> SaveChangesAsync();
         Task<IEnumerable<User>> GetUsersLikePostByIdAsync(int id);
-        Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId);
-        Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize);
-        Task<PostResponseDto?> GetPostDtoByIdAsync(int id);
+        Task<List<PostResponseDto>> GetPostsByUserIdAsync(int userId, int viewerId);
+        Task<PagedResult<PostResponseDto>> GetFeedAsync(int pageNumber, int pageSize, int viewerId);
+        Task<PostResponseDto?> GetPostDtoByIdAsync(int id, int viewerId);
     }
 }
