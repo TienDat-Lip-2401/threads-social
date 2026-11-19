@@ -166,6 +166,11 @@
         "copy": "Sao chép liên kết"
     },
 
+    "quotedPost": {
+        "unavailable": "Bài viết không còn tồn tại",
+        "isQuote": "Đã trích dẫn một bài viết"
+    },
+
     "threadModal": {
         "newThread": {
             "title": "Tạo bài viết mới",

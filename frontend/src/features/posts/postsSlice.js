@@ -505,6 +505,18 @@ export const postsSlice = createSlice({
                 // Build interaction cho post mới
                 syncInteraction(state, newPost);
 
+                // Quote: bài gốc +1 reposts_and_quotes_count
+                const quotedId = newPost.quoted_post_id;
+                if (quotedId) {
+                    findPosts(state, quotedId).forEach((p) => {
+                        p.reposts_and_quotes_count =
+                            (p.reposts_and_quotes_count || 0) + 1;
+                    });
+                    if (state.interactions[quotedId]) {
+                        state.interactions[quotedId].repostCount += 1;
+                    }
+                }
+
                 // Đang ở trang hồ sơ của chính mình → hiện bài mới ở đầu
                 if (
                     state.profile.username?.toLowerCase() ===

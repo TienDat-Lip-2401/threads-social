@@ -118,6 +118,11 @@ export const createPost = createAsyncThunk(
                 });
             }
 
+            // 3. Quote: id bài được trích dẫn
+            if (postData.quotedPostId) {
+                formData.append('quoted_post_id', postData.quotedPostId);
+            }
+
             // Call API với FormData
             const response = await http.post('posts', formData, {
                 headers: {

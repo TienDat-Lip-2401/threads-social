@@ -166,6 +166,11 @@
         "copy": "Copy link"
     },
 
+    "quotedPost": {
+        "unavailable": "This post is no longer available",
+        "isQuote": "Quoted a post"
+    },
+
     "threadModal": {
         "newThread": {
             "title": "New thread",

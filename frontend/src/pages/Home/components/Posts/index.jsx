@@ -59,6 +59,8 @@ function Posts({ posts, hasMore }) {
                             verified={post.user.verified}
                             images={post.media_urls}
                             timeAgo={post.created_at}
+                            quotedPostId={post.quoted_post_id}
+                            quotedPost={post.quoted_post}
                         />
                     ))}
                 </InfiniteScroll>

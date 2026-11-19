@@ -12,6 +12,7 @@ import repostIcon from '@/assets/icons/repost-icon.svg';
 import shareIcon from '@/assets/icons/share-icon.svg';
 import PostActionButton from '../PostActionButton';
 import ReplyModal from '@/components/BaseThreadModal/ReplyModal';
+import NewThreadModal from '@/components/BaseThreadModal/NewThreadModal';
 import SharedMenuDropDown from '../SharedMenuDropDown';
 import RepostMenuDropDown from '../RepostMenuDropDown';
 import CopyAsImageModal from '../CopyAsImageModal';
@@ -25,6 +26,7 @@ function InteractionBar({ postId, showMetrics }) {
     const isAuthenticated = useIsAuthenticated();
 
     const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+    const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
     const [showEmbedModal, setShowEmbedModal] = useState(false);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -116,8 +118,9 @@ function InteractionBar({ postId, showMetrics }) {
         dispatch(toggleRepostPost(postId));
     };
 
+    // Quote: mở hộp đăng bài mới kèm thẻ nhúng bài này
     const handleQuote = () => {
-        console.log('Quote');
+        setIsQuoteModalOpen(true);
     };
 
     // Dynamic config - data thay đổi theo interaction state
@@ -212,6 +215,15 @@ function InteractionBar({ postId, showMetrics }) {
                 >
                     {showMetrics && 0}
                 </PostActionButton>
+            )}
+
+            {/* Quote Modal: bài mới trích dẫn bài này */}
+            {post && isAuthenticated && (
+                <NewThreadModal
+                    isOpenModal={isQuoteModalOpen}
+                    setIsOpenModal={setIsQuoteModalOpen}
+                    quotedPost={post}
+                />
             )}
 
             {/* Reply Modal */}

@@ -7,6 +7,7 @@ import PostAvatar from './components/PostAvatar';
 import PostHeader from './components/PostHeader';
 import ImageCarousel from '../ImageCarousel';
 import PostDropdown from './components/PostDropdown';
+import QuotedPostCard from '../QuotedPostCard';
 
 // const images = [
 //     'https://hips.hearstapps.com/hmg-prod/images/gettyimages-1144982182.jpg',
@@ -26,6 +27,8 @@ function PostCard({
     showPlusIcon = true,
     isForCapture = false,
     showMetrics = true,
+    quotedPostId = null, // Quote: có id nhưng quotedPost = null → bài gốc đã bị xóa
+    quotedPost = null,
 }) {
     return (
         <div
@@ -82,6 +85,13 @@ function PostCard({
             {/* Images with drag scroll */}
             {images && images.length > 0 && (
                 <ImageCarousel images={images} postId={postId} />
+            )}
+
+            {/* Quote: thẻ nhúng bài được trích dẫn */}
+            {quotedPostId && (
+                <div className={cn(!isForCapture && 'px-16')}>
+                    <QuotedPostCard post={quotedPost} />
+                </div>
             )}
 
             <div className={cn(!isForCapture && 'px-14')}>

@@ -1,7 +1,8 @@
 import BaseThreadModal from './index';
 
 // Config cho BaseThreadModal, không chứa UI logic.
-function NewThreadModal({ isOpenModal, setIsOpenModal }) {
+// quotedPost: có → hộp đăng bài Quote (kèm thẻ nhúng bài gốc)
+function NewThreadModal({ isOpenModal, setIsOpenModal, quotedPost = null }) {
     return (
         <BaseThreadModal
             // 📌 Props từ parent component
@@ -9,6 +10,7 @@ function NewThreadModal({ isOpenModal, setIsOpenModal }) {
             setIsOpen={setIsOpenModal}
             // 📌 Config cố định cho New Thread
             type='New thread'
+            quotedPost={quotedPost}
         />
     );
 }

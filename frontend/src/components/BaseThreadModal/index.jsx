@@ -10,6 +10,7 @@ import ModalHeader from './components/ModalHeader';
 import ModalFooter from './components/ModalFooter';
 import ModalContent from './components/ModalContent';
 import OriginalPost from './components/OriginalPost';
+import QuotedPostCard from '@/components/QuotedPostCard';
 import RepliesList from './components/RepliesList';
 import defaultAvatar from '@/assets/images/default-avatar.jpeg';
 import { useCurrentUser } from '@/features/auth';
@@ -21,6 +22,7 @@ import { useCurrentUser } from '@/features/auth';
  * @param {string} type - type của modal ("New thread" hoặc "Reply")
  * @param {object} originalPost - Post gốc (chỉ dùng cho Reply modal)
  * @param {number} postId - ID của post gốc (cho reply)
+ * @param {object} quotedPost - Bài được trích dẫn (chỉ dùng cho Quote)
  */
 function BaseThreadModal({
     isOpen,
@@ -28,6 +30,7 @@ function BaseThreadModal({
     type = 'newThread',
     originalPost = null,
     postId = null,
+    quotedPost = null,
 }) {
     const { t } = useTranslation();
     const dispatch = useDispatch();
@@ -186,6 +189,7 @@ function BaseThreadModal({
                     createPost({
                         content: validThreads[0].content.trim(),
                         media: validThreads[0].images,
+                        quotedPostId: quotedPost?.id,
                     }),
                 ).unwrap();
                 toast.success('Post created!');
@@ -273,6 +277,13 @@ function BaseThreadModal({
                             </React.Fragment>
                         );
                     })}
+
+                    {/* Quote: xem trước bài được trích dẫn */}
+                    {quotedPost && (
+                        <div className='px-6 pb-3 pl-[72px]'>
+                            <QuotedPostCard post={quotedPost} showStats={false} />
+                        </div>
+                    )}
 
                     {/* "Add to thread" button */}
                     {isReplyMode && (
