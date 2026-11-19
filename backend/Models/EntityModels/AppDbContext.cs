@@ -132,6 +132,8 @@ public partial class AppDbContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.Password).HasMaxLength(255);
+            // User cũ (trước AddRoleToUserTable) có Role rỗng → migration FixEmptyUserRole sửa; mặc định ở DB là 'User'
+            entity.Property(e => e.Role).HasDefaultValue("User");
             entity.Property(e => e.Username).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.Bio).HasMaxLength(160);

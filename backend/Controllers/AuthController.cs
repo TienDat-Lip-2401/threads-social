@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Pharse2.Filters;
 using Pharse2.Models.DtoModels.Auth;
 using Pharse2.Models.DtoModels.User;
 using Pharse2.Services.Interfaces;
@@ -97,8 +96,8 @@ namespace Pharse2.Controllers
             return StatusCode(response.StatusCode, response);
         }
 
+        // Thu hồi phiên của chính mình: chỉ cần đăng nhập (middleware đã kiểm tra), không cần role
         [HttpPost("revoke-all-sessions")]
-        [AuthorizeRole("Admin", "User")]
         public async Task<IActionResult> RevokeAllSessions()
         {
             var response = await _authService.RevokeAllSessionsAsync();

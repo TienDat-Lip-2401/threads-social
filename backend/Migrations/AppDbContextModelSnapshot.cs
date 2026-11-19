@@ -343,7 +343,9 @@ namespace Pharse2.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("User");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");

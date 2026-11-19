@@ -88,7 +88,18 @@ if (app.Environment.IsDevelopment())
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    // API: lỗi chưa xử lý → JSON 500 cùng dạng ApiResponse, không lộ chi tiết lỗi
+    // (ExceptionHandlerMiddleware tự ghi log lỗi). Response bị xóa header khi lỗi
+    // nên gắn lại CORS để FE đọc được.
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.UseCors("AllowOrigin");
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsJsonAsync(ApiResponse.Response(500, "Lỗi hệ thống, vui lòng thử lại sau!"));
+        });
+    });
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
