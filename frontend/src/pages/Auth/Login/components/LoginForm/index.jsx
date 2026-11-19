@@ -67,8 +67,12 @@ function LoginForm() {
             reset();
         } catch (error) {
             console.error('Error:', error);
-            toast.error(error.message || t('auth.messages.loginError'), {
-                duration: 3000,
+            const message =
+                error.response?.data?.message || t('auth.messages.loginError');
+            const isUnverified = error.response?.status === 403;
+
+            toast.error(message, {
+                duration: isUnverified ? 8000 : 3000,
                 position: 'top-right',
                 style: {
                     background: '#fee2e2',
@@ -76,6 +80,18 @@ function LoginForm() {
                     color: '#b91c1c',
                     fontWeight: 600,
                 },
+                // 403 = email chưa xác thực → cho đi tới trang gửi lại email (điền sẵn nếu đăng nhập bằng email)
+                ...(isUnverified && {
+                    action: {
+                        label: t('auth.verifyEmailPage.resendButton'),
+                        onClick: () =>
+                            navigate(ROUTES.VERIFY_EMAIL, {
+                                state: {
+                                    email: login.includes('@') ? login : '',
+                                },
+                            }),
+                    },
+                }),
             });
         }
     };

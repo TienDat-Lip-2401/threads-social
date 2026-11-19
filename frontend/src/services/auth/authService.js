@@ -1,7 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
 import http from '@/utils/http';
-import { getLocalAccessToken } from '@/utils/authStorage';
 
 // 👤 Fetch thông tin user hiện tại
 export const getCurrentUser = createAsyncThunk(
@@ -41,20 +40,11 @@ export const verifyEmail = async (token) => {
     return response.data;
 };
 
-export const resendVerificationEmail = async () => {
-    const token = getLocalAccessToken();
-    if (!token) throw new Error('Token not found');
-
-    const response = await http.post(
-        '/auth/resend-verification-email',
-        null, // không có body nên để null
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'x-origin': window.location.origin, // origin của frontend
-            },
-        },
-    );
+// Không cần đăng nhập: user chưa xác thực email thì chưa đăng nhập được
+export const resendVerificationEmail = async (email) => {
+    const response = await http.post('auth/resend-verification-email', {
+        email,
+    });
 
     return response;
 };

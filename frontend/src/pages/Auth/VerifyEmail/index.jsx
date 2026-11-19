@@ -3,15 +3,35 @@ import { ROUTES } from '@/constants';
 import { resendVerificationEmail, verifyEmail } from '@/services/auth';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+    Link,
+    useLocation,
+    useNavigate,
+    useSearchParams,
+} from 'react-router-dom';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+
+const errorToastStyle = {
+    position: 'top-right',
+    style: {
+        background: '#fee2e2',
+        border: '1px solid #fecaca',
+        color: '#b91c1c',
+        fontWeight: 600,
+    },
+};
 
 function VerifyEmail() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
+    // Từ form đăng nhập (403) có thể truyền sẵn email qua route state
+    const [email, setEmail] = useState(location.state?.email || '');
+    const [isResending, setIsResending] = useState(false);
 
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
@@ -47,21 +67,28 @@ function VerifyEmail() {
         [navigate, t],
     );
 
-    const handleResendEmail = async () => {
+    const handleResendEmail = async (e) => {
+        e.preventDefault();
+        if (!email.trim()) {
+            toast.error(t('auth.verifyEmailPage.emailRequired'), errorToastStyle);
+            return;
+        }
+
         try {
-            await resendVerificationEmail();
-            toast.success('Email send successfully', { duration: 3000 });
+            setIsResending(true);
+            await resendVerificationEmail(email.trim());
+            toast.success(t('auth.verifyEmailPage.resendSuccess'), {
+                duration: 3000,
+            });
         } catch (error) {
             console.log(error);
-            toast.error(error.response?.data?.message, {
-                position: 'top-right',
-                style: {
-                    background: '#fee2e2',
-                    border: '1px solid #fecaca',
-                    color: '#b91c1c',
-                    fontWeight: 600,
-                },
-            });
+            toast.error(
+                error.response?.data?.message ||
+                    t('auth.verifyEmailPage.resendError'),
+                errorToastStyle,
+            );
+        } finally {
+            setIsResending(false);
         }
     };
 
@@ -97,22 +124,46 @@ function VerifyEmail() {
                 {/* Message */}
                 <div className='text-center'>
                     <h1 className='text-lg font-semibold text-red-600 dark:text-red-200'>
-                        {t('auth.verifyEmailPage.title')}
+                        {token
+                            ? t('auth.verifyEmailPage.title')
+                            : t('auth.verifyEmailPage.resendTitle')}
                     </h1>
                     <p className='mt-2 text-sm text-red-600/80 dark:text-red-200/70'>
-                        {t('auth.verifyEmailPage.description')}
+                        {token
+                            ? t('auth.verifyEmailPage.description')
+                            : t('auth.verifyEmailPage.resendDescription')}
                     </p>
                 </div>
 
                 {/* Buttons */}
                 <div className='flex w-full flex-col gap-3'>
-                    {/* Primary: Resend Email */}
-                    <button
-                        onClick={handleResendEmail}
-                        className='flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-800'
+                    {/* Primary: nhập email + gửi lại email xác thực */}
+                    <form
+                        onSubmit={handleResendEmail}
+                        className='flex w-full flex-col gap-3'
                     >
-                        {t('auth.verifyEmailPage.resendButton')}
-                    </button>
+                        <Input
+                            type='email'
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder={t(
+                                'auth.verifyEmailPage.emailPlaceholder',
+                            )}
+                            aria-label={t(
+                                'auth.verifyEmailPage.emailPlaceholder',
+                            )}
+                            className='h-12 rounded-xl bg-white dark:bg-gray-800'
+                        />
+                        <button
+                            type='submit'
+                            disabled={isResending}
+                            className='flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 focus:ring-red-500 disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-800'
+                        >
+                            {isResending
+                                ? t('auth.verifyEmailPage.resending')
+                                : t('auth.verifyEmailPage.resendButton')}
+                        </button>
+                    </form>
 
                     {/* Secondary: Go to Login */}
                     <Link

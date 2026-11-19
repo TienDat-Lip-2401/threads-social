@@ -123,7 +123,11 @@
             "success": "Đã xác minh tài khoản thành công! Bây giờ bạn có thể đăng nhập để bắt đầu sử dụng Threads.",
             "resendSuccess": "Đã gửi lại email xác thực!",
             "resendError": "Gửi email thất bại. Vui lòng thử lại.",
-            "resending": "Đang gửi..."
+            "resending": "Đang gửi...",
+            "resendTitle": "Xác thực email của bạn",
+            "resendDescription": "Nhập email đã đăng ký để nhận lại liên kết xác thực.",
+            "emailPlaceholder": "Địa chỉ email",
+            "emailRequired": "Vui lòng nhập email."
         }
     },
 
