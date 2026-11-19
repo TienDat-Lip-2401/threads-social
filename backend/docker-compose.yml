@@ -30,7 +30,10 @@ services:
       Database__MigrateOnStartup: "true"
     ports:
       - "${API_PORT:-5080}:8080"
+    volumes:
+      - uploads:/app/wwwroot/uploads   # ảnh upload không mất khi build lại container
     restart: unless-stopped
 
 volumes:
   sqldata:
+  uploads:

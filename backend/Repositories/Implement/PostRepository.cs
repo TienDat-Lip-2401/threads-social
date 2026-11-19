@@ -20,6 +20,8 @@ namespace Pharse2.Repositories.Implement
             await _context.Posts.AddAsync(post);
         }
 
+        // DB cascade xóa luôn comment + Media của bài
+        // shortcut: file ảnh trên ổ đĩa chưa bị xóa theo
         public async Task<bool> DeleteByIdAsync(int id)
         {
             int deleted = await _context.Posts

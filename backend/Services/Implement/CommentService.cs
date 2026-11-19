@@ -1,5 +1,6 @@
 ﻿using Pharse2.Models;
 using Pharse2.Models.CommonModels;
+using Pharse2.Models.DtoModels;
 using Pharse2.Models.DtoModels.Comment;
 using Pharse2.Models.DtoModels.LikeComment;
 using Pharse2.Repositories.Interfaces;
@@ -12,41 +13,67 @@ namespace Pharse2.Services.Implement
         private readonly ICommentRepository _commentRepository;
         private readonly ICommonService _commonService;
         private readonly IPostRepository _postRepository;
-        public CommentService(ICommentRepository commentRepository, ICommonService commonService, IPostRepository postRepository)
+        private readonly IMediaStorage _mediaStorage;
+        public CommentService(ICommentRepository commentRepository, ICommonService commonService, IPostRepository postRepository, IMediaStorage mediaStorage)
         {
             _commentRepository = commentRepository;
             _commonService = commonService;
             _postRepository = postRepository;
+            _mediaStorage = mediaStorage;
         }
 
         // FE: POST posts/{id}/comments (multipart: content, media[])
-        public async Task<ApiResponse> CreatePostCommentAsync(int postId, string? content)
+        public async Task<ApiResponse> CreatePostCommentAsync(int postId, PostFormRequestDto dto)
         {
-            if (string.IsNullOrWhiteSpace(content))
+            if (string.IsNullOrWhiteSpace(dto.Content))
             {
                 return ApiResponse.ValidationError(new() { ["content"] = ["Nội dung không được để trống!"] });
+            }
+            var mediaErrors = _mediaStorage.Validate(dto.Media);
+            if (mediaErrors != null)
+            {
+                return ApiResponse.ValidationError(mediaErrors);
             }
             var post = await _postRepository.GetByIdAsync(postId);
             if (post == null || post.DeleteFlg)
             {
                 return ApiResponse.Response(404, "Post not found");
             }
+            var paths = dto.Media is { Count: > 0 } ? await _mediaStorage.SaveAsync(dto.Media) : new List<string>();
             var now = DateTime.UtcNow;
             var newComment = new Comment
             {
                 UserId = _commonService.GetUserId(),
                 PostId = postId,
-                Content = content.Trim(),
+                Content = dto.Content.Trim(),
                 CreatedAt = now,
-                UpdatedAt = now
+                UpdatedAt = now,
+                // Ảnh của comment vẫn ghi PostId để xóa bài thì DB xóa ảnh theo
+                Media = paths.Select((path, i) => new Media { PostId = postId, Path = path, SortOrder = i, CreatedAt = now, UpdatedAt = now }).ToList()
             };
-            await _commentRepository.CreateAsync(newComment);
-            if (!await _commentRepository.SaveChangesAsync())
+            try
             {
-                return ApiResponse.Response(500, "Failed to create comment");
+                await _commentRepository.CreateAsync(newComment);
+                if (!await _commentRepository.SaveChangesAsync())
+                {
+                    _mediaStorage.Delete(paths);
+                    return ApiResponse.Response(500, "Failed to create comment");
+                }
+            }
+            catch
+            {
+                _mediaStorage.Delete(paths); // lưu DB lỗi → không để file rác
+                throw;
             }
             var created = await _commentRepository.GetCommentDtoByIdAsync(newComment.Id);
-            return ApiResponse.Response(201, "Comment created successfully", created);
+            return ApiResponse.Response(201, "Comment created successfully", WithPublicUrls(created));
+        }
+
+        // media_urls trong DB là đường dẫn tương đối → đổi thành URL đầy đủ cho FE
+        private PostCommentDto? WithPublicUrls(PostCommentDto? comment)
+        {
+            if (comment != null) comment.MediaUrls = _mediaStorage.ToPublicUrls(comment.MediaUrls);
+            return comment;
         }
 
         // FE: GET posts/{id}/comments?page=&per_page= → { data: [...], pagination: {...} }
@@ -60,6 +87,7 @@ namespace Pharse2.Services.Implement
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50);
             var page = await _commentRepository.GetPostCommentsAsync(postId, pageNumber, pageSize);
+            page.Items.ForEach(c => WithPublicUrls(c));
             return ApiResponse.Paged(page, "Comments retrieved successfully");
         }
         public async Task<ApiResponse> CreateCommentAsync(CommentRequestDto dto)
@@ -99,7 +127,7 @@ namespace Pharse2.Services.Implement
                 return ApiResponse.Response(500, "Failed to create comment");
             }
             var resultDto = await _commentRepository.GetCommentDtoByIdAsync(newComment.Id);
-            return ApiResponse.Response(201, "Comment created successfully", resultDto);
+            return ApiResponse.Response(201, "Comment created successfully", WithPublicUrls(resultDto));
         }
 
         

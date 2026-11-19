@@ -6,7 +6,7 @@ namespace Pharse2.Services.Interfaces
     public interface IPostService
     {
         Task<ApiResponse> GetPostByIdAsync(int id);
-        Task<ApiResponse> CreatePostAsync(PostRequestDto dto);
+        Task<ApiResponse> CreatePostAsync(PostFormRequestDto dto);
         Task<ApiResponse> DeletePostAsync(int id);
         Task<ApiResponse> UpdatePostAsync(int id, PostRequestDto dto);
         Task<ApiResponse> GetUsersLikePostAsync(int id);

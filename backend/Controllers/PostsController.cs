@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Pharse2.Filters;
 using Pharse2.Models.DtoModels;
+using Pharse2.Services.Implement;
 using Pharse2.Services.Interfaces;
 
 namespace Pharse2.Controllers
@@ -44,9 +45,9 @@ namespace Pharse2.Controllers
             return Ok(response);
         }
         // FE gửi multipart/form-data: content + media[] (file ảnh)
-        // shortcut: media[] chưa được lưu, Bước 6 (upload ảnh) sẽ xử lý
         [HttpPost]
-        public async Task<IActionResult> CreatePost([FromForm] PostRequestDto dto)
+        [RequestSizeLimit(LocalMediaStorage.MaxRequestBytes)]
+        public async Task<IActionResult> CreatePost([FromForm] PostFormRequestDto dto)
         {
             var response = await _postService.CreatePostAsync(dto);
             return StatusCode(response.StatusCode, response);
@@ -100,11 +101,12 @@ namespace Pharse2.Controllers
             return StatusCode(response.StatusCode, response);
         }
         // FE gửi multipart/form-data: content + media[] + reply_permission
-        // shortcut: media[] và reply_permission chưa được lưu (Bước 6 xử lý ảnh)
+        // shortcut: reply_permission chưa được lưu
         [HttpPost("{id:int}/comments")]
-        public async Task<IActionResult> CreatePostComment(int id, [FromForm] PostRequestDto dto)
+        [RequestSizeLimit(LocalMediaStorage.MaxRequestBytes)]
+        public async Task<IActionResult> CreatePostComment(int id, [FromForm] PostFormRequestDto dto)
         {
-            var response = await _commentService.CreatePostCommentAsync(id, dto.Content);
+            var response = await _commentService.CreatePostCommentAsync(id, dto);
             return StatusCode(response.StatusCode, response);
         }
         [HttpGet]

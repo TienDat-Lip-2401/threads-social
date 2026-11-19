@@ -19,6 +19,8 @@ public partial class Comment : EntityBaseModel
 
     public virtual ICollection<LikeComment> LikeComments { get; set; } = new List<LikeComment>();
 
+    public virtual ICollection<Media> Media { get; set; } = new List<Media>();
+
     public virtual Comment? ParentComment { get; set; }
 
     public virtual Post Post { get; set; } = null!;

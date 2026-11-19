@@ -24,9 +24,14 @@ namespace Pharse2.Repositories.Implement
 
         public async Task<bool> DeleteByIdAsync(int id)
         {
+            // FK Media→Comment là NoAction nên xóa ảnh của comment trước, chung 1 transaction
+            // shortcut: file ảnh trên ổ đĩa chưa bị xóa theo
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            await _context.Media.Where(m => m.CommentId == id).ExecuteDeleteAsync();
             int deleted = await _context.Comments
                 .Where(c => c.Id == id)
                 .ExecuteDeleteAsync();
+            await transaction.CommitAsync();
             return deleted > 0;
         }
 

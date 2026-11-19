@@ -17,7 +17,7 @@ namespace Pharse2.Models.DtoModels
         public DateTime UpdatedAt { get => _updatedAt; set => _updatedAt = DateTime.SpecifyKind(value, DateTimeKind.Utc); }
 
         public PostUserDto User { get; set; } = null!;
-        // shortcut: chưa có bảng media, luôn rỗng; Bước 6 (upload ảnh) sẽ điền
+        // Projection lấy đường dẫn tương đối; service đổi thành URL đầy đủ (IMediaStorage.ToPublicUrls)
         public List<string> MediaUrls { get; set; } = new();
         public int LikesCount { get; set; }
         // User đang xem đã like bài này chưa (khách → luôn false)
@@ -36,6 +36,8 @@ namespace Pharse2.Models.DtoModels
             CreatedAt = p.CreatedAt,
             UpdatedAt = p.UpdatedAt,
             User = new PostUserDto { Id = p.User.Id, Username = p.User.Username },
+            MediaUrls = p.Media.Where(m => m.CommentId == null && !m.DeleteFlg)
+                .OrderBy(m => m.SortOrder).Select(m => m.Path).ToList(),
             LikesCount = p.LikePosts.Count(),
             IsLiked = p.LikePosts.Any(l => l.UserId == viewerId),
             RepliesCount = p.Comments.Count(c => c.ParentCommentId == null && !c.DeleteFlg),

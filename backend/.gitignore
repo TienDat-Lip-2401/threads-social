@@ -12,6 +12,9 @@ obj/
 # Serilog log files
 Logs/
 
+# Ảnh người dùng upload
+wwwroot/uploads/
+
 # Local secrets (dùng dotnet user-secrets thay vì file này)
 appsettings.*.local.json
 .env

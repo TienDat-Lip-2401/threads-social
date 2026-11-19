@@ -27,6 +27,8 @@ public partial class AppDbContext : DbContext
     
     public virtual DbSet<RefreshToken> RefreshToken { get; set; }
 
+    public virtual DbSet<Media> Media { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Comment>(entity =>
@@ -121,6 +123,24 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.Username).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Media>(entity =>
+        {
+            entity.ToTable("Media");
+
+            entity.Property(e => e.Path).HasMaxLength(255);
+
+            // Xóa bài → DB tự xóa ảnh của bài và ảnh của các comment trong bài
+            entity.HasOne(d => d.Post).WithMany(p => p.Media)
+                .HasForeignKey(d => d.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // SQL Server không cho 2 đường cascade (Post→Comment→Media và Post→Media)
+            // nên xóa comment phải tự xóa Media của comment trước (CommentRepository.DeleteByIdAsync)
+            entity.HasOne(d => d.Comment).WithMany(p => p.Media)
+                .HasForeignKey(d => d.CommentId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         OnModelCreatingPartial(modelBuilder);

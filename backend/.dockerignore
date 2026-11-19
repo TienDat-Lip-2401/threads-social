@@ -1,6 +1,7 @@
 bin/
 obj/
 Logs/
+wwwroot/uploads/
 .vs/
 .idea/
 .git/

@@ -15,5 +15,8 @@ public partial class Post : EntityBaseModel
 
     public virtual ICollection<LikePost> LikePosts { get; set; } = new List<LikePost>();
 
+    // Gồm cả ảnh của comment trong bài (lọc theo CommentId == null để lấy ảnh của bài)
+    public virtual ICollection<Media> Media { get; set; } = new List<Media>();
+
     public virtual User User { get; set; } = null!;
 }

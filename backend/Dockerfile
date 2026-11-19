@@ -11,8 +11,8 @@ RUN dotnet publish Pharse2.csproj -c Release -o /app/publish --no-restore /p:Use
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
-# Serilog ghi log vào ./Logs; tạo sẵn và cấp quyền cho user không phải root
-RUN mkdir -p /app/Logs && chown app /app/Logs
+# Serilog ghi log vào ./Logs, ảnh upload vào ./wwwroot/uploads (volume); tạo sẵn và cấp quyền cho user không phải root
+RUN mkdir -p /app/Logs /app/wwwroot/uploads && chown app /app/Logs /app/wwwroot/uploads
 USER app
 # Image .NET 8 mặc định lắng nghe HTTP cổng 8080
 EXPOSE 8080

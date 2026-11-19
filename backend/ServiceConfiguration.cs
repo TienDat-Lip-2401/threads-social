@@ -32,6 +32,8 @@ namespace Pharse2
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ICommonService, CommonService>();
+            services.AddHttpContextAccessor();
+            services.AddScoped<IMediaStorage, LocalMediaStorage>();
             //Repositories
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();

@@ -12,37 +12,61 @@ namespace Pharse2.Services.Implement
         private readonly IPostRepository _postRepository;
         private readonly ICommonService _commonService;
         private readonly ILogger<PostService> _logger;
+        private readonly IMediaStorage _mediaStorage;
 
 
-        public PostService(IPostRepository postRepository, ICommonService commonService, ILogger<PostService> logger)
+        public PostService(IPostRepository postRepository, ICommonService commonService, ILogger<PostService> logger, IMediaStorage mediaStorage)
         {
             _postRepository = postRepository;
             _commonService = commonService;
             _logger = logger;
+            _mediaStorage = mediaStorage;
         }
-        public async Task<ApiResponse> CreatePostAsync(PostRequestDto dto)
+        public async Task<ApiResponse> CreatePostAsync(PostFormRequestDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Content))
             {
                 return ApiResponse.Response(400, "Content cannot be empty");
             }
+            var mediaErrors = _mediaStorage.Validate(dto.Media);
+            if (mediaErrors != null)
+            {
+                return ApiResponse.ValidationError(mediaErrors);
+            }
+            var paths = dto.Media is { Count: > 0 } ? await _mediaStorage.SaveAsync(dto.Media) : new List<string>();
             var now = DateTime.UtcNow;
             var newPost = new Post
             {
                 UserId = _commonService.GetUserId(),
                 Content = dto.Content.Trim(),
                 CreatedAt = now,
-                UpdatedAt = now // không gán thì EF ghi 0001-01-01
+                UpdatedAt = now, // không gán thì EF ghi 0001-01-01
+                Media = paths.Select((path, i) => new Media { Path = path, SortOrder = i, CreatedAt = now, UpdatedAt = now }).ToList()
             };
-            await _postRepository.CreateAsync(newPost);
-            var isSaved = await _postRepository.SaveChangesAsync();
-            if(!isSaved)
+            try
             {
-                return ApiResponse.Response(500, "Failed to create post");
+                await _postRepository.CreateAsync(newPost);
+                if (!await _postRepository.SaveChangesAsync())
+                {
+                    _mediaStorage.Delete(paths);
+                    return ApiResponse.Response(500, "Failed to create post");
+                }
+            }
+            catch
+            {
+                _mediaStorage.Delete(paths); // lưu DB lỗi → không để file rác
+                throw;
             }
             // FE thêm bài mới lên đầu feed nên cần nguyên object bài viết (user, counts...)
             var created = await _postRepository.GetPostDtoByIdAsync(newPost.Id, _commonService.GetUserId());
-            return ApiResponse.Response(201, "Post created successfully", created);
+            return ApiResponse.Response(201, "Post created successfully", WithPublicUrls(created));
+        }
+
+        // media_urls trong DB là đường dẫn tương đối → đổi thành URL đầy đủ cho FE
+        private PostResponseDto? WithPublicUrls(PostResponseDto? post)
+        {
+            if (post != null) post.MediaUrls = _mediaStorage.ToPublicUrls(post.MediaUrls);
+            return post;
         }
 
         public async Task<ApiResponse> DeletePostAsync(int id)
@@ -71,7 +95,7 @@ namespace Pharse2.Services.Implement
             {
                 return ApiResponse.Response(404, "Post not found");
             }
-            return ApiResponse.Response(200, "Post retrieved successfully", post);
+            return ApiResponse.Response(200, "Post retrieved successfully", WithPublicUrls(post));
         }
 
         public async Task<ApiResponse> UpdatePostAsync(int id, PostRequestDto dto)
@@ -127,6 +151,7 @@ namespace Pharse2.Services.Implement
         public async Task<ApiResponse> GetPostsByUserIdAsync(int userId)
         {
             var posts = await _postRepository.GetPostsByUserIdAsync(userId, _commonService.GetUserId());
+            posts.ForEach(p => WithPublicUrls(p));
             if(posts.Count == 0)
             {
                 return ApiResponse.Response(404, "This user has no posts yet or does not exist.");
@@ -140,6 +165,7 @@ namespace Pharse2.Services.Implement
             pageNumber = Math.Max(1, pageNumber);
             pageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50); // chặn per_page quá lớn
             var page = await _postRepository.GetFeedAsync(pageNumber, pageSize, _commonService.GetUserId());
+            page.Items.ForEach(p => WithPublicUrls(p));
             return ApiResponse.Paged(page, "Lấy danh sách thành công!");
         }
     }

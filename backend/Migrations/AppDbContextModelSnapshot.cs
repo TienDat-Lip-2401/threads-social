@@ -157,6 +157,46 @@ namespace Pharse2.Migrations
                     b.ToTable("RefreshToken");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.Media", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DeleteFlg")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("Media", (string)null);
+                });
+
             modelBuilder.Entity("Pharse2.Models.Post", b =>
                 {
                     b.Property<int>("Id")
@@ -313,6 +353,24 @@ namespace Pharse2.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Pharse2.Models.Media", b =>
+                {
+                    b.HasOne("Pharse2.Models.Comment", "Comment")
+                        .WithMany("Media")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Pharse2.Models.Post", "Post")
+                        .WithMany("Media")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("Pharse2.Models.Post", b =>
                 {
                     b.HasOne("Pharse2.Models.User", "User")
@@ -329,6 +387,8 @@ namespace Pharse2.Migrations
                     b.Navigation("InverseParentComment");
 
                     b.Navigation("LikeComments");
+
+                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("Pharse2.Models.Post", b =>
@@ -336,6 +396,8 @@ namespace Pharse2.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("LikePosts");
+
+                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("Pharse2.Models.User", b =>
